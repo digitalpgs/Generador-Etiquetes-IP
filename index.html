@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador d'etiquetes IP</title>
 
 <!-- AQUESTA ÉS LA LÍNIA QUE HAS D'AFEGIR -->
@@ -400,16 +401,19 @@ window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
 
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-    }
-</style>
+  <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden; /* Evita que res surti pels costats */
+        }
+    </style>
 
-<footer style="width: 100%; box-sizing: border-box; background: #555555; color: #ffffff; text-align: center; padding: 15px 0; font-family: sans-serif; font-size: 10px; letter-spacing: 2px;">
-    <i>by:</i> <strong style="color: #ffffff;"> <i>digitalpages</i></strong>
-</footer>
+
+    <footer style="width: 100%; box-sizing: border-box; background: #555555; color: #ffffff; text-align: center; padding: 15px 0; font-family: sans-serif; font-size: 10px; letter-spacing: 2px;">
+        <i>by:</i> <strong style="color: #ffffff;"> <i>digitalpages</i></strong>
+    </footer>
 
 
 
