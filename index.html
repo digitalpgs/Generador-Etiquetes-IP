@@ -327,22 +327,22 @@ function printLabel(){
   /*
     ZEBRA:
     - material físic: 100 × 50 mm horitzontal
-    - Chrome: document VERTICAL 50 × 100 mm
+    - Chrome: document HORITZONTAL 100 × 50 mm
     - disseny: 98 × 48 mm
     - 1 mm de marge físic
-    - el disseny es gira 90° dins del document vertical
+    - sense cap rotació
   */
   const page = `
-    @page{size:50mm 100mm;margin:0}
+    @page{size:100mm 50mm landscape;margin:0}
     html,body{
-      width:50mm;height:100mm;
+      width:100mm;height:50mm;
       margin:0;padding:0;
       overflow:hidden;
       background:#fff;
     }
     @media print{
-      @page{size:50mm 100mm;margin:0}
-      html,body{width:50mm;height:100mm;margin:0;padding:0;overflow:hidden}
+      @page{size:100mm 50mm landscape;margin:0}
+      html,body{width:100mm;height:50mm;margin:0;padding:0;overflow:hidden}
     }
   `;
 
@@ -359,7 +359,7 @@ function printLabel(){
       box-sizing:border-box;
       border:0;
       border-radius:3mm;
-      transform:translate(-50%,-50%) rotate(90deg);
+      transform:translate(-50%,-50%);
       transform-origin:center center;
       display:grid;
       grid-template-columns:29mm 1fr;
