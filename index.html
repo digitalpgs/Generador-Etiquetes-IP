@@ -86,8 +86,7 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
    <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
 
    <button class="blue" id="update">ACTUALITZAR</button>
-   <button class="gray" id="savepdf">GUARDAR PDF / IMPRIMIR</button>
-   <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA 100 × 50 mm</button>
+      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
    <button class="gray" id="remember">GUARDAR DADES</button>
    <div id="msg" class="status"></div>
 
@@ -309,108 +308,245 @@ document.getElementById("type").addEventListener("change",typeChanged);
 ["number","title","copies"].forEach(id=>document.getElementById(id).addEventListener("input",update));
 document.getElementById("update").addEventListener("click",()=>{if(update()){document.getElementById("msg").textContent="Etiqueta actualitzada ✓";document.getElementById("msg").className="status good";}});
 document.getElementById("remember").addEventListener("click",saveData);
-function printLabel(size){
+function printLabel(){
   if(!update()){
     document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
-  // Create a completely independent print window. This avoids the print CSS
-  // problems that can occur when printing the main application window.
-  const label = document.querySelector(".label").cloneNode(true);
-  const is100 = size === "100x50";
+  const label=document.querySelector(".label").cloneNode(true);
+  const w=window.open("","_blank","width=1000,height=650");
 
-  const w = window.open("", "_blank", "width=900,height=700");
   if(!w){
-    document.getElementById("msg").textContent="El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents per a aquest fitxer.";
+    document.getElementById("msg").textContent="Firefox ha bloquejat la finestra d'impressió. Permet finestres emergents per a aquest fitxer.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
-  const page = is100
-    ? "@page{size:100mm 50mm;margin:0}"
-    : "@page{size:A4 portrait;margin:0}";
+  /*
+    CONFIGURACIÓ REAL:
+    - Zebra: 7,62 x 5,08 cm, Vertical (no es modifica)
+    - etiqueta física: 100 x 50 mm horitzontal
+    - RESULTAT BUSCAT: com la mostra de 434 exemplars
+    - marge visual: 5 mm a cada costat
+    - zona de disseny: 90 x 40 mm
+    - NO fem rotacions CSS
+    - NO fem transformacions
+    - Firefox és el navegador recomanat per imprimir
+  */
+  const page=`
+    @page{
+      size:100mm 50mm;
+      margin:0;
+    }
 
-  const labelCSS = is100 ? `
-    .label{width:99mm;height:49mm;min-width:99mm;margin:0.5mm;box-sizing:border-box;border:0;border-radius:3mm;
-      grid-template-columns:35mm 1fr;grid-template-rows:12mm 1fr}
-    .title{padding:0 2.5mm;text-align:center;justify-content:center}
-    .copies{min-width:0;overflow:hidden;padding:0 1mm}.num{font-size:68px;max-width:100%;overflow:hidden}.txt{font-size:19px;max-width:100%;overflow:hidden}
-    .barcode{padding:3mm 5mm}.barcode svg{height:29mm}
-    .digits{font-size:14px;letter-spacing:1.7px;transform:translateY(-1.5mm)}.typebadge{font-size:7px}
-  ` : `
-    .label{width:180mm;height:65mm;min-width:180mm}
+    html,body{
+      width:100mm;
+      height:50mm;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    @media print{
+      @page{
+        size:100mm 50mm;
+        margin:0;
+      }
+      html,body{
+        width:100mm;
+        height:50mm;
+        margin:0;
+        padding:0;
+        overflow:hidden;
+      }
+    }
+  `;
+
+  const css=`
+    *{box-sizing:border-box}
+
+    .label{
+      position:absolute !important;
+      left:5mm !important;
+      top:5mm !important;
+
+      width:90mm !important;
+      height:40mm !important;
+
+      min-width:90mm !important;
+      min-height:40mm !important;
+
+      margin:0 !important;
+      padding:0 !important;
+
+      border:0 !important;
+      border-radius:3mm;
+      overflow:hidden !important;
+      background:#fff;
+
+      display:grid !important;
+      grid-template-columns:30mm 1fr !important;
+      grid-template-rows:10mm 1fr !important;
+
+      transform:none !important;
+    }
+
+    .title{
+      grid-column:1/3;
+      grid-row:1;
+
+      border-bottom:1px solid #222;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      text-align:center;
+      padding:0 2mm;
+
+      font-size:18px;
+      font-weight:800;
+      line-height:1;
+
+      overflow:hidden;
+      white-space:nowrap;
+    }
+
+    .copies{
+      grid-column:1;
+      grid-row:2;
+
+      border-right:1px solid #222;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+
+      min-width:0;
+      overflow:hidden;
+      padding:0 1mm;
+    }
+
+    .num{
+      font-size:72px;
+      font-weight:900;
+      line-height:.82;
+
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
+    }
+
+    .txt{
+      font-size:17px;
+      font-weight:800;
+      line-height:1;
+      margin-top:2px;
+
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
+    }
+
+    .barcode{
+      grid-column:2;
+      grid-row:2;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+
+      min-width:0;
+      overflow:hidden;
+      padding:2mm 3mm;
+    }
+
+    .barcode svg{
+      width:100%;
+      height:24mm;
+      display:block;
+    }
+
+    .digits{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:1.3px;
+      margin-top:0;
+      transform:translateY(-1mm);
+      white-space:nowrap;
+    }
+
+    .typebadge,
+    .ean-integrated{
+      display:none !important;
+    }
   `;
 
   w.document.open();
   w.document.write(`<!doctype html>
-<html lang="ca"><head><meta charset="utf-8"><title>Imprimir etiqueta</title>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Imprimir etiqueta Zebra</title>
 <style>
 ${page}
-html,body{margin:0;padding:0;background:#fff}
 body{font-family:Arial,Helvetica,sans-serif}
-.label{background:#fff;border:1px solid #222;overflow:hidden;
-  display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
-  margin:${is100 ? "0" : "15mm auto 0"};box-sizing:border-box;border-radius:4mm}
-.title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;
-  padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
-.copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;
-  flex-direction:column;align-items:center;justify-content:center}
-.num{font-size:110px;font-weight:900;line-height:.82;white-space:nowrap;max-width:100%;overflow:hidden}.txt{font-size:27px;font-weight:800;margin-top:7px;white-space:nowrap}
-.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:2mm 10mm}
-.barcode svg{width:100%;height:29mm;display:block}
-.digits{font-size:26px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
-.typebadge{display:none}.ean-integrated{display:none}
-${labelCSS}
-</style></head><body></body></html>`);
+${css}
+</style>
+</head>
+<body></body>
+</html>`);
   w.document.close();
 
-  w.document.body.appendChild(w.document.importNode(label, true));
+  w.document.body.appendChild(w.document.importNode(label,true));
 
-  // Give the new document one paint cycle so SVG and fonts are ready.
   setTimeout(()=>{
+    // Títol sempre dins dels 90 mm.
     const t=w.document.querySelector(".title");
     if(t){
-      let fs=parseFloat(w.getComputedStyle(t).fontSize)||24;
-      while(fs>9 && t.scrollWidth>t.clientWidth){ fs-=1; t.style.fontSize=fs+"px"; }
+      let fs=18;
+      while(fs>8 && t.scrollWidth>t.clientWidth){
+        fs--;
+        t.style.fontSize=fs+"px";
+      }
     }
+
+    // Exemplars: 1 a 999, sempre dins de la columna.
     const n=w.document.querySelector(".num");
     const box=n && n.parentElement;
-    if(n && box){
-      // On 100×50 mm labels, fit the copies number to the REAL inner cell.
-      // It may shrink as much as necessary, but it must never overflow or
-      // change the 100×50 mm label dimensions.
-      n.style.maxWidth="100%";
-      n.style.overflow="hidden";
-      n.style.lineHeight=".82";
-      let fs=parseFloat(w.getComputedStyle(n).fontSize)||68;
-      const availableWidth=Math.max(20, box.clientWidth-6);
-      const availableHeight=Math.max(20, box.clientHeight-28);
-      while(fs>10 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
-        fs-=1;
+    if(n&&box){
+      let fs=72;
+      const aw=Math.max(20,box.clientWidth-2);
+      const ah=Math.max(20,box.clientHeight-6);
+
+      while(fs>10 && (n.scrollWidth>aw || n.scrollHeight>ah)){
+        fs--;
         n.style.fontSize=fs+"px";
       }
     }
+
+    // Text "Exemplars".
     const tx=w.document.querySelector(".txt");
-    const txbox=tx && tx.parentElement;
-    if(tx && txbox){
-      tx.style.maxWidth="100%";
-      tx.style.overflow="hidden";
-      let fs=parseFloat(w.getComputedStyle(tx).fontSize)||19;
-      while(fs>8 && tx.scrollWidth>txbox.clientWidth-4){
-        fs-=1;
+    if(tx){
+      let fs=17;
+      while(fs>8 && tx.scrollWidth>tx.parentElement.clientWidth-2){
+        fs--;
         tx.style.fontSize=fs+"px";
       }
     }
+
     w.focus();
     w.print();
-  }, 250);
+  },350);
 }
 
-document.getElementById("savepdf").addEventListener("click",()=>printLabel("a4"));
-document.getElementById("printlabel").addEventListener("click",()=>printLabel("100x50"));
+
+document.getElementById("printlabel").addEventListener("click",()=>printLabel());
 window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
