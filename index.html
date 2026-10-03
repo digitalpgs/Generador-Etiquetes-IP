@@ -333,7 +333,7 @@ function printLabel(size){
     : "@page{size:A4 portrait;margin:0}";
 
   const labelCSS = is100 ? `
-    .label{width:90mm;height:40mm;min-width:90mm;margin:5mm;box-sizing:border-box;border:0;border-radius:2mm;
+    .label{width:90mm !important;height:40mm !important;min-width:90mm !important;min-height:40mm !important;margin:5mm !important;box-sizing:border-box;border:0;border-radius:2mm;
       grid-template-columns:31mm 1fr;grid-template-rows:10mm 1fr}
     .title{padding:0 1mm;text-align:center;justify-content:center;font-size:18px;font-weight:800}
     .copies{min-width:0;overflow:hidden;padding:0}.num{font-size:76px;max-width:100%;overflow:hidden}.txt{font-size:18px;max-width:100%;overflow:hidden}
@@ -348,8 +348,9 @@ function printLabel(size){
 <html lang="ca"><head><meta charset="utf-8"><title>Imprimir etiqueta</title>
 <style>
 ${page}
-html,body{margin:0;padding:0;background:#fff;width:100mm;height:50mm;overflow:hidden}
-body{font-family:Arial,Helvetica,sans-serif}
+@page{size:100mm 50mm !important;margin:0 !important}
+html,body{margin:0 !important;padding:0 !important;background:#fff !important;width:100mm !important;height:50mm !important;min-width:100mm !important;min-height:50mm !important;overflow:hidden !important}
+body{font-family:Arial,Helvetica,sans-serif;box-sizing:border-box;zoom:1;transform:none}
 .label{background:#fff;border:1px solid #222;overflow:hidden;
   display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
   margin:${is100 ? "0" : "15mm auto 0"};box-sizing:border-box;border-radius:4mm}
