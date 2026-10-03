@@ -34,16 +34,16 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
 .title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
 .copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;flex-direction:column;align-items:center;justify-content:center}
 .num{font-size:110px;font-weight:900;line-height:.82;white-space:nowrap;max-width:100%;overflow:hidden}.txt{font-size:27px;font-weight:800;margin-top:7px;white-space:nowrap}
-.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5mm 14mm}
-#svg{width:100%;height:31mm;display:block}.digits{font-size:30px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
-.typebadge{display:none}
+.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4mm 10mm}
+#svg{width:100%;height:34mm;display:block}.digits{font-size:30px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
+.typebadge{display:none}.ean-integrated{display:none}
 
 /* mode impressora 100x50 */
-.print100 .label{width:100mm;height:50mm;min-width:100mm;border-radius:3mm;grid-template-columns:29mm 1fr;grid-template-rows:13mm 1fr}
+.print100 .label{width:135,71 mm;height:75mm;min-width:135,71 mm;border-radius:3mm;grid-template-columns:29mm 1fr;grid-template-rows:13mm 1fr}
 .print100 .title{font-size:17px;padding:0 3mm;text-align:center;justify-content:center;line-height:1}
 .print100 .copies{min-width:0;overflow:hidden}.print100 .num{font-size:68px;max-width:100%;overflow:hidden}.print100 .txt{font-size:19px;margin-top:4px;max-width:100%;overflow:hidden}
 .print100 .barcode{padding:4mm 7mm}.print100 #svg{height:22mm}.print100 .digits{font-size:20px;font-weight:800;letter-spacing:1.5px;margin-top:0;transform:translateY(-1.5mm);white-space:nowrap}
-.print100 .typebadge{display:none}
+.print100 .typebadge{display:none}.ean-integrated{display:none}
 
 @media(max-width:850px){.layout{grid-template-columns:1fr}.label{transform:scale(.75);transform-origin:center}}
 @media print{
@@ -52,9 +52,9 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
  .top,.controls,.previewtitle,.screen-note{display:none!important}
  .card{box-shadow:none;padding:0}.previewbox{background:#fff;padding:0;min-height:0}
  .label{margin:15mm auto 0;transform:none}
- body.print100{@page{size:100mm 50mm;margin:0}}
+ body.print100{@page{size:135,71 mm 75mm;margin:0}}
  body.print100 .previewbox{display:block}
- body.print100 .label{width:100mm;height:50mm;min-width:100mm;margin:0;border-radius:3mm}
+ body.print100 .label{width:135,71 mm;height:75mm;min-width:135,71 mm;margin:0;border-radius:3mm}
 }
 </style>
 </head>
@@ -134,10 +134,24 @@ function drawBits(bits){
  for(let i=0;i<bits.length;i++)if(bits[i]==="1"){let r=document.createElementNS(ns,"rect");r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height","94");r.setAttribute("fill","black");svg.appendChild(r);}
 }
 function drawEAN(e){
+ const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
+ svg.setAttribute("viewBox","0 0 190 100");svg.setAttribute("preserveAspectRatio","none");
+ let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
  const p=PAR[+e[0]];let left="",right="";
  for(let i=1;i<=6;i++)left+=(p[i-1]==="A"?A[+e[i]]:B[+e[i]]);
  for(let i=7;i<=12;i++)right+=C[+e[i]];
- drawBits("101"+left+"01010"+right+"101");
+ const bits="101"+left+"01010"+right+"101"; const unit=190/bits.length;
+ for(let i=0;i<bits.length;i++)if(bits[i]==="1"){
+   let r=document.createElementNS(ns,"rect");
+   const guard=(i<3)||(i>=45&&i<50)||(i>=92);
+   r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");
+   r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height",guard?"79":"70");r.setAttribute("fill","black");svg.appendChild(r);
+ }
+ const addText=(txt,x)=>{let t=document.createElementNS(ns,"text");t.setAttribute("x",String(x));t.setAttribute("y","96");t.setAttribute("text-anchor","middle");t.setAttribute("font-family","Arial,Helvetica,sans-serif");t.setAttribute("font-size","16");t.setAttribute("font-weight","700");t.setAttribute("fill","black");t.textContent=txt;svg.appendChild(t);};
+ addText(e[0],7);
+ const ls=28,rs=104,step=11.6;
+ for(let i=1;i<=6;i++)addText(e[i],ls+(i-1)*step);
+ for(let i=7;i<=12;i++)addText(e[i],rs+(i-7)*step);
 }
 function check12(s){let n=0;for(let i=0;i<12;i++)n+=+s[i]*(i%2?3:1);return(10-n%10)%10}
 function isbnToEAN(v){
@@ -263,7 +277,7 @@ function update(){
   }
   return String(value||"");
 }
- document.getElementById("outNumber").textContent=formatHumanCode(type,shown);
+ const outNum=document.getElementById("outNumber"); outNum.className="digits"+((type==="ean13"||type==="isbn")?" ean-integrated":""); outNum.textContent=(type==="ean13"||type==="isbn")?"":formatHumanCode(type,shown);
  fitLabelText();
  document.getElementById("outType").textContent=type==="ean13"?"EAN-13":type==="isbn"?"ISBN":"GS1-128";
  return true;
@@ -315,37 +329,16 @@ function printLabel(size){
   }
 
   const page = is100
-    ? `@page{size:50mm 100mm portrait;margin:0}
-       html,body{width:50mm;height:100mm;margin:0;padding:0;overflow:hidden}
-       *{box-sizing:border-box}
-       @media print{
-         @page{size:50mm 100mm portrait;margin:0}
-         html,body{width:50mm;height:100mm;margin:0;padding:0;overflow:hidden}
-       }`
+    ? "@page{size:100mm 50mm;margin:0}"
     : "@page{size:A4 portrait;margin:0}";
 
   const labelCSS = is100 ? `
-    /* ZEBRA ZT111:
-       EL DISSENY ES VERTICAL 40x90 mm.
-       La impressió física de la Zebra surt sobre etiqueta 100x50 mm horitzontal. */
-    .label{
-      position:relative;
-      width:40mm;height:90mm;
-      min-width:40mm;min-height:90mm;
-      margin:0;
-      box-sizing:border-box;
-      border:0;border-radius:3mm;
-      transform:none;
-      grid-template-columns:29mm 1fr;
-      grid-template-rows:11mm 1fr;
-    }
-    .title{padding:0 2mm;text-align:center;justify-content:center;font-size:17px;line-height:1}
-    .copies{min-width:0;overflow:hidden;padding:0 1mm}
-    .num{font-size:68px;max-width:100%;overflow:hidden}
-    .txt{font-size:18px;max-width:100%;overflow:hidden;margin-top:3px}
-    .barcode{padding:2mm 4mm;min-width:0;overflow:hidden}
-    .barcode svg{width:100%;height:21mm;display:block}
-    .digits{font-size:14px;letter-spacing:1.5px;transform:translateY(-1mm)}
+    .label{width:99mm;height:49mm;min-width:99mm;margin:0.5mm;box-sizing:border-box;border:0;border-radius:3mm;
+      grid-template-columns:35mm 1fr;grid-template-rows:12mm 1fr}
+    .title{padding:0 2.5mm;text-align:center;justify-content:center}
+    .copies{min-width:0;overflow:hidden;padding:0 1mm}.num{font-size:68px;max-width:100%;overflow:hidden}.txt{font-size:19px;max-width:100%;overflow:hidden}
+    .barcode{padding:3mm 5mm}.barcode svg{height:29mm}
+    .digits{font-size:14px;letter-spacing:1.7px;transform:translateY(-1.5mm)}.typebadge{font-size:7px}
   ` : `
     .label{width:180mm;height:65mm;min-width:180mm}
   `;
@@ -359,8 +352,7 @@ html,body{margin:0;padding:0;background:#fff}
 body{font-family:Arial,Helvetica,sans-serif}
 .label{background:#fff;border:1px solid #222;overflow:hidden;
   display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
-  margin:${is100 ? "5mm" : "15mm auto 0"};box-sizing:border-box;border-radius:4mm}
-${is100 ? 'body{width:100mm;height:50mm;overflow:hidden}.label{width:90mm;height:40mm;min-width:90mm;min-height:40mm}' : ''}
+  margin:${is100 ? "0" : "15mm auto 0"};box-sizing:border-box;border-radius:4mm}
 .title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;
   padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
 .copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;
@@ -370,25 +362,12 @@ ${is100 ? 'body{width:100mm;height:50mm;overflow:hidden}.label{width:90mm;height
   justify-content:center;padding:2mm 10mm}
 .barcode svg{width:100%;height:29mm;display:block}
 .digits{font-size:26px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
-.typebadge{display:none}
+.typebadge{display:none}.ean-integrated{display:none}
 ${labelCSS}
 </style></head><body></body></html>`);
   w.document.close();
 
   w.document.body.appendChild(w.document.importNode(label, true));
-
-  // For Zebra 100x50, force the exact physical page and centered 90x40 mm content.
-  if(is100){
-    const printedLabel = w.document.querySelector(".label");
-    if(printedLabel){
-      printedLabel.style.width = "90mm";
-      printedLabel.style.height = "40mm";
-      printedLabel.style.minWidth = "90mm";
-      printedLabel.style.minHeight = "40mm";
-      printedLabel.style.margin = "5mm";
-      printedLabel.style.border = "0";
-    }
-  }
 
   // Give the new document one paint cycle so SVG and fonts are ready.
   setTimeout(()=>{
@@ -409,7 +388,7 @@ ${labelCSS}
       let fs=parseFloat(w.getComputedStyle(n).fontSize)||68;
       const availableWidth=Math.max(20, box.clientWidth-6);
       const availableHeight=Math.max(20, box.clientHeight-28);
-      while(fs>24 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
+      while(fs>10 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
         fs-=1;
         n.style.fontSize=fs+"px";
       }
@@ -420,7 +399,7 @@ ${labelCSS}
       tx.style.maxWidth="100%";
       tx.style.overflow="hidden";
       let fs=parseFloat(w.getComputedStyle(tx).fontSize)||19;
-      while(fs>12 && tx.scrollWidth>txbox.clientWidth-4){
+      while(fs>8 && tx.scrollWidth>txbox.clientWidth-4){
         fs-=1;
         tx.style.fontSize=fs+"px";
       }
