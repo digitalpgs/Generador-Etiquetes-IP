@@ -310,40 +310,38 @@ document.getElementById("update").addEventListener("click",()=>{if(update()){doc
 document.getElementById("remember").addEventListener("click",saveData);
 function printLabel(){
   if(!update()){
-    document.getElementById("msg").textContent =
-      "Revisa el número, el títol i els exemplars abans d'imprimir.";
+    document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
-  const label = document.querySelector(".label").cloneNode(true);
-  const w = window.open("", "_blank", "width=700,height=900");
+  const label=document.querySelector(".label").cloneNode(true);
+  const w=window.open("","_blank","width=900,height=500");
 
   if(!w){
-    document.getElementById("msg").textContent =
-      "El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents.";
+    document.getElementById("msg").textContent="El navegador ha bloquejat la finestra d'impressió.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
   /*
-    CONFIGURACIÓ FIXA DE LA ZEBRA / CONTROLADOR
-    --------------------------------------------
-    Amplada:  7,62 cm = 76,2 mm
-    Alçada:   5,08 cm = 50,8 mm
-    Orientació: VERTICAL
+    IMPORTANT:
+    El controlador Zebra que tens NO es pot canviar i està configurat:
+      7,62 cm x 5,08 cm
+      orientació Vertical
 
-    NO intentem canviar aquesta configuració des del navegador.
+    Chrome no pot imprimir un disseny de 100 mm d'amplada dins
+    d'un paper que el controlador declara de 76,2 mm.
 
-    La zona de disseny utilitzada és 74,2 x 48,8 mm:
-    1 mm de marge per costat.
+    Per evitar el problema de les 2 pàgines, enviem UNA SOLA PÀGINA
+    de 76,2 x 50,8 mm i el disseny ocupa 74,2 x 48,8 mm.
+    No fem cap rotació CSS.
   */
-  const page = `
+  const page=`
     @page{
       size:76.2mm 50.8mm;
       margin:0;
     }
-
     html,body{
       width:76.2mm;
       height:50.8mm;
@@ -352,13 +350,8 @@ function printLabel(){
       overflow:hidden;
       background:#fff;
     }
-
     @media print{
-      @page{
-        size:76.2mm 50.8mm;
-        margin:0;
-      }
-
+      @page{size:76.2mm 50.8mm;margin:0}
       html,body{
         width:76.2mm;
         height:50.8mm;
@@ -369,26 +362,17 @@ function printLabel(){
     }
   `;
 
-  /*
-    El controlador està en VERTICAL però la pròpia etiqueta física és
-    horitzontal. Per això posem el disseny horitzontal dins de la pàgina
-    del controlador i el girem 90°.
-  */
-  const printCSS = `
+  const printCSS=`
     *{box-sizing:border-box}
 
     .label{
       position:absolute;
-
-      left:50%;
-      top:50%;
-
-      width:48.8mm;
-      height:74.2mm;
-
-      min-width:48.8mm;
-      min-height:74.2mm;
-
+      left:1mm;
+      top:1mm;
+      width:74.2mm;
+      height:48.8mm;
+      min-width:74.2mm;
+      min-height:48.8mm;
       margin:0;
       border:0;
       border-radius:3mm;
@@ -399,45 +383,35 @@ function printLabel(){
       grid-template-columns:22mm 1fr;
       grid-template-rows:12mm 1fr;
 
-      transform:translate(-50%,-50%) rotate(90deg);
-      transform-origin:center center;
+      transform:none;
     }
 
     .title{
       grid-column:1/3;
       grid-row:1;
-
       border-bottom:1px solid #222;
-
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
-
       padding:0 2mm;
-
       font-size:18px;
       font-weight:800;
-      line-height:1;
-
       overflow:hidden;
       white-space:nowrap;
+      line-height:1;
     }
 
     .copies{
       grid-column:1;
       grid-row:2;
-
       border-right:1px solid #222;
-
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-
       min-width:0;
       overflow:hidden;
-
       padding:0 1mm;
     }
 
@@ -445,7 +419,6 @@ function printLabel(){
       font-size:68px;
       font-weight:900;
       line-height:.82;
-
       white-space:nowrap;
       max-width:100%;
       overflow:hidden;
@@ -455,7 +428,6 @@ function printLabel(){
       font-size:18px;
       font-weight:800;
       margin-top:3px;
-
       white-space:nowrap;
       max-width:100%;
       overflow:hidden;
@@ -464,21 +436,18 @@ function printLabel(){
     .barcode{
       grid-column:2;
       grid-row:2;
-
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-
       min-width:0;
       overflow:hidden;
-
       padding:2mm 3mm;
     }
 
     .barcode svg{
       width:100%;
-      height:38mm;
+      height:28mm;
       display:block;
     }
 
@@ -488,92 +457,52 @@ function printLabel(){
       letter-spacing:1.2px;
       margin-top:0;
       transform:translateY(-1mm);
-
       white-space:nowrap;
     }
 
-    .typebadge,
-    .ean-integrated{
-      display:none !important;
-    }
+    .typebadge,.ean-integrated{display:none!important}
   `;
 
   w.document.open();
-
-  w.document.write(`<!doctype html>
-<html lang="ca">
-<head>
-<meta charset="utf-8">
+  w.document.write(`<!doctype html><html lang="ca"><head><meta charset="utf-8">
 <title>Imprimir etiqueta</title>
-<style>
-${page}
-body{font-family:Arial,Helvetica,sans-serif}
-${printCSS}
-</style>
-</head>
-
-<body></body>
-</html>`);
-
+<style>${page}body{font-family:Arial,Helvetica,sans-serif}${printCSS}</style>
+</head><body></body></html>`);
   w.document.close();
 
-  w.document.body.appendChild(
-    w.document.importNode(label,true)
-  );
+  w.document.body.appendChild(w.document.importNode(label,true));
 
   setTimeout(()=>{
-    // Títol: reducció automàtica si és massa llarg.
-    const title=w.document.querySelector(".title");
-
-    if(title){
+    const t=w.document.querySelector(".title");
+    if(t){
       let fs=18;
-
-      while(
-        fs>8 &&
-        title.scrollWidth>title.clientWidth
-      ){
+      while(fs>8 && t.scrollWidth>t.clientWidth){
         fs--;
-        title.style.fontSize=fs+"px";
+        t.style.fontSize=fs+"px";
       }
     }
 
-    // Número d'exemplars: 1, 10, 100, 999...
-    const num=w.document.querySelector(".num");
-    const copyBox=w.document.querySelector(".copies");
-
-    if(num && copyBox){
+    const n=w.document.querySelector(".num");
+    const b=w.document.querySelector(".copies");
+    if(n&&b){
       let fs=68;
-
-      while(
-        fs>10 &&
-        (
-          num.scrollWidth>copyBox.clientWidth-2 ||
-          num.scrollHeight>copyBox.clientHeight-8
-        )
-      ){
+      while(fs>10 && (n.scrollWidth>b.clientWidth-2 || n.scrollHeight>b.clientHeight-8)){
         fs--;
-        num.style.fontSize=fs+"px";
+        n.style.fontSize=fs+"px";
       }
     }
 
-    // "Exemplars"
-    const txt=w.document.querySelector(".txt");
-
-    if(txt){
+    const tx=w.document.querySelector(".txt");
+    if(tx){
       let fs=18;
-
-      while(
-        fs>8 &&
-        txt.scrollWidth>txt.parentElement.clientWidth-2
-      ){
+      while(fs>8 && tx.scrollWidth>tx.parentElement.clientWidth-2){
         fs--;
-        txt.style.fontSize=fs+"px";
+        tx.style.fontSize=fs+"px";
       }
     }
 
     w.focus();
     w.print();
-
   },350);
 }
 
