@@ -86,7 +86,11 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
    <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
 
    <button class="blue" id="update">ACTUALITZAR</button>
-      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
+      <select id="printOrientation" style="padding:10px 14px;border-radius:8px;border:1px solid #ccc;font-weight:700">
+  <option value="landscape">HORITZONTAL</option>
+  <option value="portrait">VERTICAL</option>
+</select>
+<button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
    <button class="gray" id="remember">GUARDAR DADES</button>
    <div id="msg" class="status"></div>
 
@@ -309,6 +313,7 @@ document.getElementById("type").addEventListener("change",typeChanged);
 document.getElementById("update").addEventListener("click",()=>{if(update()){document.getElementById("msg").textContent="Etiqueta actualitzada ✓";document.getElementById("msg").className="status good";}});
 document.getElementById("remember").addEventListener("click",saveData);
 function printLabel(){
+  const orientation = document.getElementById("printOrientation")?.value || "landscape";
   if(!update()){
     document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
     document.getElementById("msg").className="status bad";
@@ -336,41 +341,25 @@ function printLabel(){
     La pàgina que veu Chrome/Firefox és EXACTAMENT 100 x 50 mm.
     Això evita que cada navegador calculi una pàgina diferent.
   */
-  const page=`
-    @page{
-      size:100mm 50mm;
-      margin:0;
+  const page = orientation === "portrait" ? `
+    @page{size:50mm 100mm portrait;margin:0}
+    html,body{
+      width:50mm !important;height:100mm !important;
+      margin:0 !important;padding:0 !important;overflow:hidden !important;background:#fff;
     }
-
-    html{
-      width:100mm !important;
-      height:50mm !important;
-      margin:0 !important;
-      padding:0 !important;
-    }
-
-    body{
-      width:100mm !important;
-      height:50mm !important;
-      margin:0 !important;
-      padding:0 !important;
-      overflow:hidden !important;
-      background:#fff;
-    }
-
     @media print{
-      @page{
-        size:100mm 50mm;
-        margin:0;
-      }
-
-      html,body{
-        width:100mm !important;
-        height:50mm !important;
-        margin:0 !important;
-        padding:0 !important;
-        overflow:hidden !important;
-      }
+      @page{size:50mm 100mm portrait;margin:0}
+      html,body{width:50mm !important;height:100mm !important;margin:0 !important;padding:0 !important;overflow:hidden !important}
+    }
+  ` : `
+    @page{size:100mm 50mm landscape;margin:0}
+    html,body{
+      width:100mm !important;height:50mm !important;
+      margin:0 !important;padding:0 !important;overflow:hidden !important;background:#fff;
+    }
+    @media print{
+      @page{size:100mm 50mm landscape;margin:0}
+      html,body{width:100mm !important;height:50mm !important;margin:0 !important;padding:0 !important;overflow:hidden !important}
     }
   `;
 
@@ -490,8 +479,25 @@ function printLabel(){
     }
 
     .typebadge,
-    .ean-integrated{
-      display:none !important;
+    .ean-integrated{display:none !important;}
+
+    /* Orientació vertical: etiqueta 40x90 mm, centrada, sense girs. */
+    body.print-portrait .label{
+      left:5mm !important;
+      top:5mm !important;
+      width:40mm !important;
+      height:90mm !important;
+      min-width:40mm !important;
+      min-height:90mm !important;
+      transform:none !important;
+      transform-origin:center center !important;
+      margin:0 !important;
+      grid-template-columns:18mm 1fr !important;
+      grid-template-rows:12mm 1fr !important;
+    }
+
+    body.print-portrait .barcode svg{
+      height:58mm;
     }
   `;
 
@@ -510,6 +516,10 @@ ${printCSS}
 <body></body>
 </html>`);
   w.document.close();
+
+  if(orientation === "portrait"){
+    w.document.body.classList.add("print-portrait");
+  }
 
   w.document.body.appendChild(w.document.importNode(label,true));
 
