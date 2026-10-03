@@ -310,47 +310,63 @@ document.getElementById("update").addEventListener("click",()=>{if(update()){doc
 document.getElementById("remember").addEventListener("click",saveData);
 function printLabel(){
   if(!update()){
-    document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars.";
+    document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
   const label=document.querySelector(".label").cloneNode(true);
-  const w=window.open("","_blank","width=700,height=1000");
+  const w=window.open("","_blank","width=1100,height=700");
+
   if(!w){
-    document.getElementById("msg").textContent="Permet finestres emergents per poder imprimir.";
+    document.getElementById("msg").textContent="El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents.";
     document.getElementById("msg").className="status bad";
     return;
   }
 
   /*
-    CONFIGURACIÓ FIXA DE LA ZEBRA (foto):
-      7,62 cm × 5,08 cm
-      VERTICAL
+    OBJECTIU FÍSIC:
+      etiqueta Zebra = 100 x 50 mm horitzontal
+      marge = 2 mm per costat
+      zona de disseny = 96 x 46 mm
+      centrat exacte.
 
-    Perquè Firefox no canviï l'orientació, la pàgina enviada al navegador
-    és PORTRAIT: 50,8 × 76,2 mm.
-    La etiqueta útil queda centrada dins d'aquesta pàgina.
-    No usem rotate() ni transform().
+    IMPORTANT:
+    No fem cap rotació ni transformació.
+    La pàgina que veu Chrome/Firefox és EXACTAMENT 100 x 50 mm.
+    Això evita que cada navegador calculi una pàgina diferent.
   */
   const page=`
     @page{
-      size:50.8mm 76.2mm;
+      size:100mm 50mm;
       margin:0;
     }
-    html,body{
-      width:50.8mm !important;
-      height:76.2mm !important;
+
+    html{
+      width:100mm !important;
+      height:50mm !important;
+      margin:0 !important;
+      padding:0 !important;
+    }
+
+    body{
+      width:100mm !important;
+      height:50mm !important;
       margin:0 !important;
       padding:0 !important;
       overflow:hidden !important;
       background:#fff;
     }
+
     @media print{
-      @page{size:50.8mm 76.2mm;margin:0}
+      @page{
+        size:100mm 50mm;
+        margin:0;
+      }
+
       html,body{
-        width:50.8mm !important;
-        height:76.2mm !important;
+        width:100mm !important;
+        height:50mm !important;
         margin:0 !important;
         padding:0 !important;
         overflow:hidden !important;
@@ -358,110 +374,175 @@ function printLabel(){
     }
   `;
 
-  const css=`
+  const printCSS=`
     *{box-sizing:border-box}
 
-    /*
-      Disseny vertical gran:
-      48,8 × 74,2 mm, 1 mm de marge.
-    */
     .label{
       position:absolute !important;
-      left:1mm !important;
-      top:1mm !important;
-      width:48.8mm !important;
-      height:74.2mm !important;
-      min-width:48.8mm !important;
-      min-height:74.2mm !important;
+      left:2mm !important;
+      top:2mm !important;
+
+      width:96mm !important;
+      height:46mm !important;
+
+      min-width:96mm !important;
+      min-height:46mm !important;
+
       margin:0 !important;
       padding:0 !important;
+
       border:0 !important;
       border-radius:3mm;
       overflow:hidden !important;
       background:#fff;
+
       display:grid !important;
-      grid-template-columns:18mm 1fr !important;
-      grid-template-rows:13mm 1fr !important;
+      grid-template-columns:34mm 1fr !important;
+      grid-template-rows:12mm 1fr !important;
+
       transform:none !important;
+      zoom:1 !important;
     }
 
     .title{
-      grid-column:1/3;grid-row:1;
+      grid-column:1/3;
+      grid-row:1;
       border-bottom:1px solid #222;
-      display:flex;align-items:center;justify-content:center;
-      text-align:center;padding:0 2mm;
-      font-size:15px;font-weight:800;line-height:1;
-      overflow:hidden;white-space:nowrap;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      text-align:center;
+      padding:0 2mm;
+
+      font-size:20px;
+      font-weight:800;
+      line-height:1;
+
+      overflow:hidden;
+      white-space:nowrap;
     }
 
     .copies{
-      grid-column:1;grid-row:2;
+      grid-column:1;
+      grid-row:2;
+
       border-right:1px solid #222;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      min-width:0;overflow:hidden;padding:0 1mm;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+
+      min-width:0;
+      overflow:hidden;
+      padding:0 1mm;
     }
 
     .num{
-      font-size:62px;font-weight:900;line-height:.82;
-      white-space:nowrap;max-width:100%;overflow:hidden;
+      font-size:82px;
+      font-weight:900;
+      line-height:.82;
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
     }
 
     .txt{
-      font-size:13px;font-weight:800;line-height:1;
-      margin-top:3px;white-space:nowrap;
-      max-width:100%;overflow:hidden;
+      font-size:20px;
+      font-weight:800;
+      line-height:1;
+      margin-top:3px;
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
     }
 
     .barcode{
-      grid-column:2;grid-row:2;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-      min-width:0;overflow:hidden;padding:2mm 2mm;
+      grid-column:2;
+      grid-row:2;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+
+      min-width:0;
+      overflow:hidden;
+
+      padding:2mm 4mm;
     }
 
-    .barcode svg{width:100%;height:50mm;display:block}
+    .barcode svg{
+      width:100%;
+      height:29mm;
+      display:block;
+    }
 
     .digits{
-      font-size:11px;font-weight:800;letter-spacing:1px;
-      margin-top:0;transform:translateY(-1mm);white-space:nowrap;
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:1.4px;
+      margin-top:0;
+      transform:translateY(-1mm);
+      white-space:nowrap;
     }
 
-    .typebadge,.ean-integrated{display:none !important}
+    .typebadge,
+    .ean-integrated{
+      display:none !important;
+    }
   `;
 
   w.document.open();
-  w.document.write(`<!doctype html><html lang="ca"><head>
-<meta charset="utf-8"><title>Imprimir etiqueta Zebra vertical</title>
-<style>${page}body{font-family:Arial,Helvetica,sans-serif}${css}</style>
-</head><body></body></html>`);
+  w.document.write(`<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Imprimir etiqueta 100x50</title>
+<style>
+${page}
+body{font-family:Arial,Helvetica,sans-serif}
+${printCSS}
+</style>
+</head>
+<body></body>
+</html>`);
   w.document.close();
 
   w.document.body.appendChild(w.document.importNode(label,true));
 
   setTimeout(()=>{
+    // Títol: sempre dins dels 96 mm.
     const t=w.document.querySelector(".title");
     if(t){
-      let fs=15;
-      while(fs>7 && t.scrollWidth>t.clientWidth){
-        fs--;t.style.fontSize=fs+"px";
+      let fs=20;
+      while(fs>8 && t.scrollWidth>t.clientWidth){
+        fs--;
+        t.style.fontSize=fs+"px";
       }
     }
 
+    // Exemplars: 1..999 sempre dins de la seva columna.
     const n=w.document.querySelector(".num");
     const box=n&&n.parentElement;
     if(n&&box){
-      let fs=62;
-      while(fs>10 && (n.scrollWidth>box.clientWidth-2 || n.scrollHeight>box.clientHeight-5)){
-        fs--;n.style.fontSize=fs+"px";
+      let fs=82;
+      const aw=Math.max(20,box.clientWidth-2);
+      const ah=Math.max(20,box.clientHeight-8);
+      while(fs>10 && (n.scrollWidth>aw || n.scrollHeight>ah)){
+        fs--;
+        n.style.fontSize=fs+"px";
       }
     }
 
     const tx=w.document.querySelector(".txt");
     if(tx){
-      let fs=13;
-      while(fs>7 && tx.scrollWidth>tx.parentElement.clientWidth-2){
-        fs--;tx.style.fontSize=fs+"px";
+      let fs=20;
+      while(fs>8 && tx.scrollWidth>tx.parentElement.clientWidth-2){
+        fs--;
+        tx.style.fontSize=fs+"px";
       }
     }
 
@@ -470,6 +551,8 @@ function printLabel(){
   },350);
 }
 
+
+document.getElementById("printlabel").addEventListener("click",()=>printLabel());
 window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
@@ -491,7 +574,3 @@ loadData();
 
 </body>
 </html>
-<script>
-</script>
-
-<script>document.getElementById("printlabel").addEventListener("click",()=>printLabel());</script>
