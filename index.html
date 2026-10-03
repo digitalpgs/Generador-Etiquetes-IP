@@ -86,7 +86,8 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
    <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
 
    <button class="blue" id="update">ACTUALITZAR</button>
-      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
+   <button class="gray" id="savepdf">GUARDAR PDF / IMPRIMIR</button>
+   <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA 100 × 50 mm</button>
    <button class="gray" id="remember">GUARDAR DADES</button>
    <div id="msg" class="status"></div>
 
@@ -308,7 +309,7 @@ document.getElementById("type").addEventListener("change",typeChanged);
 ["number","title","copies"].forEach(id=>document.getElementById(id).addEventListener("input",update));
 document.getElementById("update").addEventListener("click",()=>{if(update()){document.getElementById("msg").textContent="Etiqueta actualitzada ✓";document.getElementById("msg").className="status good";}});
 document.getElementById("remember").addEventListener("click",saveData);
-function printLabel(){
+function printLabel(size){
   if(!update()){
     document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
     document.getElementById("msg").className="status bad";
@@ -318,7 +319,7 @@ function printLabel(){
   // Create a completely independent print window. This avoids the print CSS
   // problems that can occur when printing the main application window.
   const label = document.querySelector(".label").cloneNode(true);
-  const is100 = true;
+  const is100 = size === "100x50";
 
   const w = window.open("", "_blank", "width=900,height=700");
   if(!w){
@@ -408,7 +409,8 @@ ${labelCSS}
   }, 250);
 }
 
-document.getElementById("printlabel").addEventListener("click",()=>printLabel());
+document.getElementById("savepdf").addEventListener("click",()=>printLabel("a4"));
+document.getElementById("printlabel").addEventListener("click",()=>printLabel("100x50"));
 window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
