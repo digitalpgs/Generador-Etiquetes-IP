@@ -19,7 +19,7 @@ h1{margin:0 0 5px}.muted{color:#666;margin-bottom:20px}
 label{display:block;font-weight:700;margin:14px 0 6px}
 input,select{width:100%;padding:12px;border:1px solid #aaa;border-radius:8px;font-size:17px;background:white}
 input::placeholder{color:#999}
-button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
 .blue{background:#1769d2;color:#fff}.gray{background:#e7ebf0;color:#222}
 .status{min-height:21px;margin-top:7px;font-size:14px}.good{color:#16752b}.bad{color:#b00020}
 .note{font-size:12px;color:#777;line-height:1.45;margin-top:15px}
@@ -327,8 +327,8 @@ function printLabel(){
   /*
     OBJECTIU FÍSIC:
       etiqueta Zebra = 100 x 50 mm horitzontal
-      marge = 2 mm per costat
-      zona de disseny = 96 x 46 mm
+      marge = 5 mm per costat
+      zona de disseny = 90 x 40 mm
       centrat exacte.
 
     IMPORTANT:
@@ -379,14 +379,14 @@ function printLabel(){
 
     .label{
       position:absolute !important;
-      left:2mm !important;
-      top:2mm !important;
+      left:5mm !important;
+      top:5mm !important;
 
-      width:96mm !important;
-      height:46mm !important;
+      width:90mm !important;
+      height:40mm !important;
 
-      min-width:96mm !important;
-      min-height:46mm !important;
+      min-width:90mm !important;
+      min-height:40mm !important;
 
       margin:0 !important;
       padding:0 !important;
@@ -397,8 +397,8 @@ function printLabel(){
       background:#fff;
 
       display:grid !important;
-      grid-template-columns:34mm 1fr !important;
-      grid-template-rows:12mm 1fr !important;
+      grid-template-columns:32mm 1fr !important;
+      grid-template-rows:10mm 1fr !important;
 
       transform:none !important;
       zoom:1 !important;
@@ -416,7 +416,7 @@ function printLabel(){
       text-align:center;
       padding:0 2mm;
 
-      font-size:20px;
+      font-size:18px;
       font-weight:800;
       line-height:1;
 
@@ -441,7 +441,7 @@ function printLabel(){
     }
 
     .num{
-      font-size:82px;
+      font-size:72px;
       font-weight:900;
       line-height:.82;
       white-space:nowrap;
@@ -450,10 +450,10 @@ function printLabel(){
     }
 
     .txt{
-      font-size:20px;
+      font-size:17px;
       font-weight:800;
       line-height:1;
-      margin-top:3px;
+      margin-top:2px;
       white-space:nowrap;
       max-width:100%;
       overflow:hidden;
@@ -476,7 +476,7 @@ function printLabel(){
 
     .barcode svg{
       width:100%;
-      height:29mm;
+      height:24mm;
       display:block;
     }
 
