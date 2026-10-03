@@ -316,8 +316,7 @@ function printLabel(){
   }
 
   const label=document.querySelector(".label").cloneNode(true);
-  const w=window.open("","_blank","width=900,height=650");
-
+  const w=window.open("","_blank","width=700,height=1000");
   if(!w){
     document.getElementById("msg").textContent="Permet finestres emergents per poder imprimir.";
     document.getElementById("msg").className="status bad";
@@ -325,29 +324,33 @@ function printLabel(){
   }
 
   /*
-    ZEBRA: configuració FIXA de la foto
-      7,62 cm x 5,08 cm
+    CONFIGURACIÓ FIXA DE LA ZEBRA (foto):
+      7,62 cm × 5,08 cm
       VERTICAL
 
-    Enviem exactament 76,2 x 50,8 mm al controlador.
-    NO fem rotate() ni transform().
-    El disseny ocupa 74,2 x 48,8 mm, centrat amb 1 mm de marge.
+    Perquè Firefox no canviï l'orientació, la pàgina enviada al navegador
+    és PORTRAIT: 50,8 × 76,2 mm.
+    La etiqueta útil queda centrada dins d'aquesta pàgina.
+    No usem rotate() ni transform().
   */
   const page=`
-    @page{size:76.2mm 50.8mm;margin:0}
+    @page{
+      size:50.8mm 76.2mm;
+      margin:0;
+    }
     html,body{
-      width:76.2mm !important;
-      height:50.8mm !important;
+      width:50.8mm !important;
+      height:76.2mm !important;
       margin:0 !important;
       padding:0 !important;
       overflow:hidden !important;
       background:#fff;
     }
     @media print{
-      @page{size:76.2mm 50.8mm;margin:0}
+      @page{size:50.8mm 76.2mm;margin:0}
       html,body{
-        width:76.2mm !important;
-        height:50.8mm !important;
+        width:50.8mm !important;
+        height:76.2mm !important;
         margin:0 !important;
         padding:0 !important;
         overflow:hidden !important;
@@ -358,14 +361,18 @@ function printLabel(){
   const css=`
     *{box-sizing:border-box}
 
+    /*
+      Disseny vertical gran:
+      48,8 × 74,2 mm, 1 mm de marge.
+    */
     .label{
       position:absolute !important;
       left:1mm !important;
       top:1mm !important;
-      width:74.2mm !important;
-      height:48.8mm !important;
-      min-width:74.2mm !important;
-      min-height:48.8mm !important;
+      width:48.8mm !important;
+      height:74.2mm !important;
+      min-width:48.8mm !important;
+      min-height:74.2mm !important;
       margin:0 !important;
       padding:0 !important;
       border:0 !important;
@@ -373,8 +380,8 @@ function printLabel(){
       overflow:hidden !important;
       background:#fff;
       display:grid !important;
-      grid-template-columns:28mm 1fr !important;
-      grid-template-rows:10mm 1fr !important;
+      grid-template-columns:18mm 1fr !important;
+      grid-template-rows:13mm 1fr !important;
       transform:none !important;
     }
 
@@ -383,7 +390,7 @@ function printLabel(){
       border-bottom:1px solid #222;
       display:flex;align-items:center;justify-content:center;
       text-align:center;padding:0 2mm;
-      font-size:17px;font-weight:800;line-height:1;
+      font-size:15px;font-weight:800;line-height:1;
       overflow:hidden;white-space:nowrap;
     }
 
@@ -396,13 +403,13 @@ function printLabel(){
     }
 
     .num{
-      font-size:70px;font-weight:900;line-height:.82;
+      font-size:62px;font-weight:900;line-height:.82;
       white-space:nowrap;max-width:100%;overflow:hidden;
     }
 
     .txt{
-      font-size:16px;font-weight:800;line-height:1;
-      margin-top:2px;white-space:nowrap;
+      font-size:13px;font-weight:800;line-height:1;
+      margin-top:3px;white-space:nowrap;
       max-width:100%;overflow:hidden;
     }
 
@@ -410,13 +417,13 @@ function printLabel(){
       grid-column:2;grid-row:2;
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
-      min-width:0;overflow:hidden;padding:2mm 3mm;
+      min-width:0;overflow:hidden;padding:2mm 2mm;
     }
 
-    .barcode svg{width:100%;height:28mm;display:block}
+    .barcode svg{width:100%;height:50mm;display:block}
 
     .digits{
-      font-size:13px;font-weight:800;letter-spacing:1.2px;
+      font-size:11px;font-weight:800;letter-spacing:1px;
       margin-top:0;transform:translateY(-1mm);white-space:nowrap;
     }
 
@@ -425,7 +432,7 @@ function printLabel(){
 
   w.document.open();
   w.document.write(`<!doctype html><html lang="ca"><head>
-<meta charset="utf-8"><title>Imprimir etiqueta Zebra</title>
+<meta charset="utf-8"><title>Imprimir etiqueta Zebra vertical</title>
 <style>${page}body{font-family:Arial,Helvetica,sans-serif}${css}</style>
 </head><body></body></html>`);
   w.document.close();
@@ -435,8 +442,8 @@ function printLabel(){
   setTimeout(()=>{
     const t=w.document.querySelector(".title");
     if(t){
-      let fs=17;
-      while(fs>8 && t.scrollWidth>t.clientWidth){
+      let fs=15;
+      while(fs>7 && t.scrollWidth>t.clientWidth){
         fs--;t.style.fontSize=fs+"px";
       }
     }
@@ -444,7 +451,7 @@ function printLabel(){
     const n=w.document.querySelector(".num");
     const box=n&&n.parentElement;
     if(n&&box){
-      let fs=70;
+      let fs=62;
       while(fs>10 && (n.scrollWidth>box.clientWidth-2 || n.scrollHeight>box.clientHeight-5)){
         fs--;n.style.fontSize=fs+"px";
       }
@@ -452,8 +459,8 @@ function printLabel(){
 
     const tx=w.document.querySelector(".txt");
     if(tx){
-      let fs=16;
-      while(fs>8 && tx.scrollWidth>tx.parentElement.clientWidth-2){
+      let fs=13;
+      while(fs>7 && tx.scrollWidth>tx.parentElement.clientWidth-2){
         fs--;tx.style.fontSize=fs+"px";
       }
     }
@@ -462,6 +469,7 @@ function printLabel(){
     w.print();
   },350);
 }
+
 window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
@@ -483,4 +491,7 @@ loadData();
 
 </body>
 </html>
+<script>
+</script>
+
 <script>document.getElementById("printlabel").addEventListener("click",()=>printLabel());</script>
