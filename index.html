@@ -333,11 +333,11 @@ function printLabel(size){
     : "@page{size:A4 portrait;margin:0}";
 
   const labelCSS = is100 ? `
-    .label{width:99mm;height:49mm;min-width:99mm;margin:0.5mm;box-sizing:border-box;border:0;border-radius:3mm;
-      grid-template-columns:35mm 1fr;grid-template-rows:12mm 1fr}
-    .title{padding:0 2.5mm;text-align:center;justify-content:center}
-    .copies{min-width:0;overflow:hidden;padding:0 1mm}.num{font-size:68px;max-width:100%;overflow:hidden}.txt{font-size:19px;max-width:100%;overflow:hidden}
-    .barcode{padding:3mm 5mm}.barcode svg{height:29mm}
+    .label{width:90mm;height:40mm;min-width:90mm;margin:5mm;box-sizing:border-box;border:0;border-radius:2mm;
+      grid-template-columns:30mm 1fr;grid-template-rows:10mm 1fr}
+    .title{padding:0 2mm;text-align:center;justify-content:center;font-size:16px}
+    .copies{min-width:0;overflow:hidden;padding:0 0.5mm}.num{font-size:62px;max-width:100%;overflow:hidden}.txt{font-size:17px;max-width:100%;overflow:hidden}
+    .barcode{padding:2mm 4mm}.barcode svg{height:25mm}
     .digits{font-size:14px;letter-spacing:1.7px;transform:translateY(-1.5mm)}.typebadge{font-size:7px}
   ` : `
     .label{width:180mm;height:65mm;min-width:180mm}
@@ -348,7 +348,7 @@ function printLabel(size){
 <html lang="ca"><head><meta charset="utf-8"><title>Imprimir etiqueta</title>
 <style>
 ${page}
-html,body{margin:0;padding:0;background:#fff}
+html,body{margin:0;padding:0;background:#fff;width:100mm;height:50mm;overflow:hidden}
 body{font-family:Arial,Helvetica,sans-serif}
 .label{background:#fff;border:1px solid #222;overflow:hidden;
   display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
