@@ -1,501 +1,816 @@
 <!doctype html>
+
 <html lang="ca">
+
 <head>
+
 <meta charset="utf-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Generador d'etiquetes IP</title>
 
+
+
 <!-- AQUESTA ÉS LA LÍNIA QUE HAS D'AFEGIR -->
+
 <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKZIk3k8MTcrpOf7m7nhzkK2Pa16HNJIy8uYtZXxClVnAY2qp5gyMfafk&s=10">
 
+
+
 <style>
+
 *{box-sizing:border-box}
+
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef1f5;color:#222}
+
 .wrap{max-width:1120px;margin:24px auto;padding:18px}
+
 h1{margin:0 0 5px}.muted{color:#666;margin-bottom:20px}
+
 .layout{display:grid;grid-template-columns:350px 1fr;gap:20px}
+
 .card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px #0001}
+
 label{display:block;font-weight:700;margin:14px 0 6px}
+
 input,select{width:100%;padding:12px;border:1px solid #aaa;border-radius:8px;font-size:17px;background:white}
+
 input::placeholder{color:#999}
+
 button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}
+
 .blue{background:#1769d2;color:#fff}.gray{background:#e7ebf0;color:#222}
+
 .status{min-height:21px;margin-top:7px;font-size:14px}.good{color:#16752b}.bad{color:#b00020}
+
 .note{font-size:12px;color:#777;line-height:1.45;margin-top:15px}
+
 .previewbox{background:#e9edf1;min-height:510px;display:flex;align-items:center;justify-content:center;padding:25px;overflow:auto}
 
+
+
 /* etiqueta principal 180x65 mm */
+
 .label{
- width:180mm;height:65mm;min-width:180mm;background:#fff;
- border:1px solid #222;border-radius:4mm;overflow:hidden;
- display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
+
+ width:180mm;height:65mm;min-width:180mm;background:#fff;
+
+ border:1px solid #222;border-radius:4mm;overflow:hidden;
+
+ display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
+
 }
+
 .title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
+
 .copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;flex-direction:column;align-items:center;justify-content:center}
+
 .num{font-size:110px;font-weight:900;line-height:.82;white-space:nowrap;max-width:100%;overflow:hidden}.txt{font-size:27px;font-weight:800;margin-top:7px;white-space:nowrap}
+
 .barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4mm 10mm}
+
 #svg{width:100%;height:34mm;display:block}.digits{font-size:30px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
+
 .typebadge{display:none}.ean-integrated{display:none}
 
+
+
 /* mode impressora 100x50 */
+
 .print100 .label{width:100mm;height:50mm;min-width:100mm;border-radius:3mm;grid-template-columns:29mm 1fr;grid-template-rows:13mm 1fr}
+
 .print100 .title{font-size:17px;padding:0 3mm;text-align:center;justify-content:center;line-height:1}
+
 .print100 .copies{min-width:0;overflow:hidden}.print100 .num{font-size:68px;max-width:100%;overflow:hidden}.print100 .txt{font-size:19px;margin-top:4px;max-width:100%;overflow:hidden}
+
 .print100 .barcode{padding:4mm 7mm}.print100 #svg{height:22mm}.print100 .digits{font-size:20px;font-weight:800;letter-spacing:1.5px;margin-top:0;transform:translateY(-1.5mm);white-space:nowrap}
+
 .print100 .typebadge{display:none}.ean-integrated{display:none}
 
+
+
 @media(max-width:850px){.layout{grid-template-columns:1fr}.label{transform:scale(.75);transform-origin:center}}
+
 @media print{
- @page{size:A4 portrait;margin:0}
- body{background:#fff}.wrap{margin:0;padding:0}
- .top,.controls,.previewtitle,.screen-note{display:none!important}
- .card{box-shadow:none;padding:0}.previewbox{background:#fff;padding:0;min-height:0}
- .label{margin:15mm auto 0;transform:none}
- body.print100{@page{size:100mm 50mm;margin:0}}
- body.print100 .previewbox{display:block}
- body.print100 .label{width:100mm;height:50mm;min-width:100mm;margin:0;border-radius:3mm}
+
+ @page{size:A4 portrait;margin:0}
+
+ body{background:#fff}.wrap{margin:0;padding:0}
+
+ .top,.controls,.previewtitle,.screen-note{display:none!important}
+
+ .card{box-shadow:none;padding:0}.previewbox{background:#fff;padding:0;min-height:0}
+
+ .label{margin:15mm auto 0;transform:none}
+
+ body.print100{@page{size:100mm 50mm;margin:0}}
+
+ body.print100 .previewbox{display:block}
+
+ body.print100 .label{width:100mm;height:50mm;min-width:100mm;margin:0;border-radius:3mm}
+
 }
+
 </style>
+
 </head>
+
 <body>
+
 <div class="wrap">
- <div class="top">
-  <h1>Generador d'Etiquetes Impremta Pagès</h1>
-  <div class="muted"><i>EAN-13 · ISBN · GS1-128 · impressora d'etiquetes 100 × 50 mm</i></div>
- </div>
 
- <div class="layout">
-  <div class="card controls">
-   <label>Tipus de codi</label>
-   <select id="type">
-    <option value="ean13">EAN-13</option>
-    <option value="isbn">ISBN</option>
-    <option value="gs1128">GS1-128</option>
-   </select>
+ <div class="top">
 
-   <label id="numberLabel">Número EAN-13</label>
-   <input id="number" placeholder="Introdueix aquí el número" inputmode="numeric">
+  <h1>Generador d'Etiquetes Impremta Pagès</h1>
 
-   <div id="numberStatus" class="status"></div>
+  <div class="muted"><i>EAN-13 · ISBN · GS1-128 · impressora d'etiquetes 100 × 50 mm</i></div>
 
-   <label>Títol</label>
-   <input id="title" placeholder="Introdueix aquí el títol">
+ </div>
 
-   <label>Nombre d'exemplars</label>
-   <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
 
-   <button class="blue" id="update">ACTUALITZAR</button>
-      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
-   <button class="gray" id="remember">GUARDAR DADES</button>
-   <div id="msg" class="status"></div>
 
-   <div class="note">
-    <b>EAN-13:</b> introdueix 12 o 13 dígits. Amb 12, calcula el dígit de control.<br>
-    <b>ISBN:</b> pots introduir ISBN-13 o ISBN-10; es converteix i es genera el codi EAN-13 corresponent.<br>
-    <b>GS1-128:</b> introdueix el contingut que vols codificar, per exemple
-    <b>(01)08412345678903(17)261231</b>. La representació de barres es genera localment.
-   </div>
-  </div>
+ <div class="layout">
 
-  <div class="card">
-   <div class="previewtitle" style="font-weight:700;margin-bottom:10px">VISTA PRÈVIA</div>
-   <div class="previewbox">
-    <div class="label">
-     <div class="title" id="outTitle"></div>
-     <div class="copies"><div class="num" id="outCopies">0</div><div class="txt">Exemplars</div></div>
-     <div class="barcode">
-      <div class="typebadge" id="outType" aria-hidden="true"></div>
-      <svg id="svg" viewBox="0 0 190 100" preserveAspectRatio="none"></svg>
-      <div class="digits" id="outNumber"></div>
-     </div>
-    </div>
-   </div>
-   <div class="screen-note" style="font-size:12px;color:#777;margin-top:10px;text-align:center">Etiqueta principal: 180 × 65 mm · cantonades arrodonides</div>
-  </div>
- </div>
+  <div class="card controls">
+
+   <label>Tipus de codi</label>
+
+   <select id="type">
+
+    <option value="ean13">EAN-13</option>
+
+    <option value="isbn">ISBN</option>
+
+    <option value="gs1128">GS1-128</option>
+
+   </select>
+
+
+
+   <label id="numberLabel">Número EAN-13</label>
+
+   <input id="number" placeholder="Introdueix aquí el número" inputmode="numeric">
+
+
+
+   <div id="numberStatus" class="status"></div>
+
+
+
+   <label>Títol</label>
+
+   <input id="title" placeholder="Introdueix aquí el títol">
+
+
+
+   <label>Nombre d'exemplars</label>
+
+   <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
+
+
+
+   <button class="blue" id="update">ACTUALITZAR</button>
+
+      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
+
+   <button class="gray" id="remember">GUARDAR DADES</button>
+
+   <div id="msg" class="status"></div>
+
+
+
+   <div class="note">
+
+    <b>EAN-13:</b> introdueix 12 o 13 dígits. Amb 12, calcula el dígit de control.<br>
+
+    <b>ISBN:</b> pots introduir ISBN-13 o ISBN-10; es converteix i es genera el codi EAN-13 corresponent.<br>
+
+    <b>GS1-128:</b> introdueix el contingut que vols codificar, per exemple
+
+    <b>(01)08412345678903(17)261231</b>. La representació de barres es genera localment.
+
+   </div>
+
+  </div>
+
+
+
+  <div class="card">
+
+   <div class="previewtitle" style="font-weight:700;margin-bottom:10px">VISTA PRÈVIA</div>
+
+   <div class="previewbox">
+
+    <div class="label">
+
+     <div class="title" id="outTitle"></div>
+
+     <div class="copies"><div class="num" id="outCopies">0</div><div class="txt">Exemplars</div></div>
+
+     <div class="barcode">
+
+      <div class="typebadge" id="outType" aria-hidden="true"></div>
+
+      <svg id="svg" viewBox="0 0 190 100" preserveAspectRatio="none"></svg>
+
+      <div class="digits" id="outNumber"></div>
+
+     </div>
+
+    </div>
+
+   </div>
+
+   <div class="screen-note" style="font-size:12px;color:#777;margin-top:10px;text-align:center">Etiqueta principal: 180 × 65 mm · cantonades arrodonides</div>
+
+  </div>
+
+ </div>
+
 </div>
 
+
+
 <script>
+
 const A=["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"];
+
 const B=["0100111","0110011","0011011","0100001","0011101","0111001","0000101","0010001","0001001","0010111"];
+
 const C=["1110010","1100110","1101100","1000010","1011100","1001110","1010000","1000100","1001000","1110100"];
+
 const PAR=["AAAAAA","AABABB","AABBAB","AABBBA","ABAABB","ABBAAB","ABBBAA","ABABAB","ABABBA","ABBABA"];
 
+
+
 /* Code 128 patterns, values 0-106 */
+
 const C128=["11011001100","11001101100","11001100110","10010011000","10010001100","10001001100","10011001000","10011000100","10001100100","11001001000","11001000100","11000100100","10110011100","10011011100","10011001110","10111001100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11101101110","11101001100","11100101100","11100100110","11101100100","11100110100","11100110010","11011011000","11011000110","11000110110","10100011000","10001011000","10001000110","10110001000","10001101000","10001100010","11010001000","11000101000","11000100010","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101110110","11010001110","11000101110","11011101000","11011100010","11011101110","11101011000","11101000110","11100010110","11101101000","11101100010","11100011010","11101111010","11001000010","11110001010","10100110000","10100001100","10010110000","10010000110","10000101100","10000100110","10110010000","10110000100","10011010000","10011000010","10000110100","10000110010","11000010010","11001010000","11110111010","11000010100","10001111010","10100111100","10010111100","10010011110","10111100100","10011110100","10011110010","11110100100","11110010100","11110010010","11011011110","11011110110","11110110110","10101111000","10100011110","10001011110","10111101000","10111100010","11110101000","11110100010","10111011110","10111101110","11101011110","11110101110","11010000100","11010010000","11010011100","1100011101011"];
 
 
+
+
+
 function drawBits(bits){
- const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
- let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
- let unit=190/bits.length;
- for(let i=0;i<bits.length;i++)if(bits[i]==="1"){let r=document.createElementNS(ns,"rect");r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height","94");r.setAttribute("fill","black");svg.appendChild(r);}
+
+ const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
+
+ let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
+
+ let unit=190/bits.length;
+
+ for(let i=0;i<bits.length;i++)if(bits[i]==="1"){let r=document.createElementNS(ns,"rect");r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height","94");r.setAttribute("fill","black");svg.appendChild(r);}
+
 }
+
 function drawEAN(e){
- const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
- svg.setAttribute("viewBox","0 0 190 100");svg.setAttribute("preserveAspectRatio","none");
- let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
- const p=PAR[+e[0]];let left="",right="";
- for(let i=1;i<=6;i++)left+=(p[i-1]==="A"?A[+e[i]]:B[+e[i]]);
- for(let i=7;i<=12;i++)right+=C[+e[i]];
- const bits="101"+left+"01010"+right+"101"; const unit=190/bits.length;
- for(let i=0;i<bits.length;i++)if(bits[i]==="1"){
-   let r=document.createElementNS(ns,"rect");
-   const guard=(i<3)||(i>=45&&i<50)||(i>=92);
-   r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");
-   r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height",guard?"79":"70");r.setAttribute("fill","black");svg.appendChild(r);
- }
- const addText=(txt,x)=>{let t=document.createElementNS(ns,"text");t.setAttribute("x",String(x));t.setAttribute("y","96");t.setAttribute("text-anchor","middle");t.setAttribute("font-family","Arial,Helvetica,sans-serif");t.setAttribute("font-size","16");t.setAttribute("font-weight","700");t.setAttribute("fill","black");t.textContent=txt;svg.appendChild(t);};
- addText(e[0],7);
- const ls=28,rs=104,step=11.6;
- for(let i=1;i<=6;i++)addText(e[i],ls+(i-1)*step);
- for(let i=7;i<=12;i++)addText(e[i],rs+(i-7)*step);
+
+ const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
+
+ svg.setAttribute("viewBox","0 0 190 100");svg.setAttribute("preserveAspectRatio","none");
+
+ let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
+
+ const p=PAR[+e[0]];let left="",right="";
+
+ for(let i=1;i<=6;i++)left+=(p[i-1]==="A"?A[+e[i]]:B[+e[i]]);
+
+ for(let i=7;i<=12;i++)right+=C[+e[i]];
+
+ const bits="101"+left+"01010"+right+"101"; const unit=190/bits.length;
+
+ for(let i=0;i<bits.length;i++)if(bits[i]==="1"){
+
+   let r=document.createElementNS(ns,"rect");
+
+   const guard=(i<3)||(i>=45&&i<50)||(i>=92);
+
+   r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");
+
+   r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height",guard?"79":"70");r.setAttribute("fill","black");svg.appendChild(r);
+
+ }
+
+ const addText=(txt,x)=>{let t=document.createElementNS(ns,"text");t.setAttribute("x",String(x));t.setAttribute("y","96");t.setAttribute("text-anchor","middle");t.setAttribute("font-family","Arial,Helvetica,sans-serif");t.setAttribute("font-size","16");t.setAttribute("font-weight","700");t.setAttribute("fill","black");t.textContent=txt;svg.appendChild(t);};
+
+ addText(e[0],7);
+
+ const ls=28,rs=104,step=11.6;
+
+ for(let i=1;i<=6;i++)addText(e[i],ls+(i-1)*step);
+
+ for(let i=7;i<=12;i++)addText(e[i],rs+(i-7)*step);
+
 }
+
 function check12(s){let n=0;for(let i=0;i<12;i++)n+=+s[i]*(i%2?3:1);return(10-n%10)%10}
+
 function isbnToEAN(v){
- let x=v.replace(/[-\s]/g,"");
- if(x.length===10){if(!/^\d{9}[\dXx]$/.test(x))return null;x="978"+x.slice(0,9);}
- if(x.length===13&&/^\d{13}$/.test(x)){if(x.slice(0,3)!=="978"&&x.slice(0,3)!=="979")return null;return x.slice(0,12)+check12(x.slice(0,12));}
- return null;
+
+ let x=v.replace(/[-\s]/g,"");
+
+ if(x.length===10){if(!/^\d{9}[\dXx]$/.test(x))return null;x="978"+x.slice(0,9);}
+
+ if(x.length===13&&/^\d{13}$/.test(x)){if(x.slice(0,3)!=="978"&&x.slice(0,3)!=="979")return null;return x.slice(0,12)+check12(x.slice(0,12));}
+
+ return null;
+
 }
+
 /* Compact Code128 encoder for GS1-128. Uses Code Set B for general text.
-   FNC1 is inserted for GS1-128 and represented by value 102. */
+
+   FNC1 is inserted for GS1-128 and represented by value 102. */
+
 function code128Value(ch){return ch.charCodeAt(0)-32}
+
 function gs1Payload(input){
-  let s=input.trim();
-  // Allow the convenient GS1 notation: (01)123...(17)...
-  // Parentheses are human-readable AI separators and are not encoded.
-  const parts=[...s.matchAll(/\((\d{2,4})\)([^()]+)/g)];
-  if(parts.length){
-    let out="";
-    for(let i=0;i<parts.length;i++){
-      const ai=parts[i][1], value=parts[i][2];
-      out+=ai+value;
-      // Variable-length common AIs: add FNC1 between fields.
-      const variable=["10","21","22","30","37","240","241","242","250","251","253","254","400","401","402","420","421","422","423","424","425","426"];
-      if(variable.includes(ai) && i<parts.length-1) out+=String.fromCharCode(29);
-    }
-    return out;
-  }
-  return s;
+
+  let s=input.trim();
+
+  // Allow the convenient GS1 notation: (01)123...(17)...
+
+  // Parentheses are human-readable AI separators and are not encoded.
+
+  const parts=[...s.matchAll(/\((\d{2,4})\)([^()]+)/g)];
+
+  if(parts.length){
+
+    let out="";
+
+    for(let i=0;i<parts.length;i++){
+
+      const ai=parts[i][1], value=parts[i][2];
+
+      out+=ai+value;
+
+      // Variable-length common AIs: add FNC1 between fields.
+
+      const variable=["10","21","22","30","37","240","241","242","250","251","253","254","400","401","402","420","421","422","423","424","425","426"];
+
+      if(variable.includes(ai) && i<parts.length-1) out+=String.fromCharCode(29);
+
+    }
+
+    return out;
+
+  }
+
+  return s;
+
 }
+
 function drawGS1(v){
-  const payload=gs1Payload(v);
-  // GS1-128 starts in Code Set B and carries FNC1 (value 102).
-  const values=[104,102];
-  for(let i=0;i<payload.length;i++){
-    const ch=payload[i];
-    if(ch===String.fromCharCode(29)){ values.push(102); continue; }
-    const code=ch.charCodeAt(0)-32;
-    if(code<0 || code>95) throw new Error("GS1-128: caràcter no suportat");
-    values.push(code);
-  }
-  let checksum=values[0];
-  for(let i=1;i<values.length;i++) checksum += values[i]*i;
-  values.push(checksum%103);
-  values.push(106);
-  drawBits(values.map(v=>C128[v]).join(""));
+
+  const payload=gs1Payload(v);
+
+  // GS1-128 starts in Code Set B and carries FNC1 (value 102).
+
+  const values=[104,102];
+
+  for(let i=0;i<payload.length;i++){
+
+    const ch=payload[i];
+
+    if(ch===String.fromCharCode(29)){ values.push(102); continue; }
+
+    const code=ch.charCodeAt(0)-32;
+
+    if(code<0 || code>95) throw new Error("GS1-128: caràcter no suportat");
+
+    values.push(code);
+
+  }
+
+  let checksum=values[0];
+
+  for(let i=1;i<values.length;i++) checksum += values[i]*i;
+
+  values.push(checksum%103);
+
+  values.push(106);
+
+  drawBits(values.map(v=>C128[v]).join(""));
+
 }
+
 function fitTitle(){
- const el=document.getElementById("outTitle");
- if(!el) return;
- let size=42;
- const min=10;
- el.style.fontSize=size+"px";
- while(size>min && el.scrollWidth>el.clientWidth){
-   size-=1;
-   el.style.fontSize=size+"px";
- }
+
+ const el=document.getElementById("outTitle");
+
+ if(!el) return;
+
+ let size=42;
+
+ const min=10;
+
+ el.style.fontSize=size+"px";
+
+ while(size>min && el.scrollWidth>el.clientWidth){
+
+   size-=1;
+
+   el.style.fontSize=size+"px";
+
+ }
+
 }
+
 function fitCopies(){
- const el=document.getElementById("outCopies");
- if(!el) return;
- const box=el.parentElement;
- if(!box) return;
- // Start large and shrink continuously until the complete formatted value fits.
- // The quantity is limited to 3 digits, but the displayed value still auto-fits the available space.
- let size=120;
- const min=10;
- el.style.fontSize=size+"px";
- el.style.maxWidth="100%";
- el.style.overflow="hidden";
- el.style.whiteSpace="nowrap";
- while(size>min && (el.scrollWidth>box.clientWidth-4 || el.scrollHeight>box.clientHeight*0.72)){
-   size-=1;
-   el.style.fontSize=size+"px";
- }
- // Safety pass: account for fractional rendering/print engines.
- if(el.scrollWidth>box.clientWidth-4 || el.scrollHeight>box.clientHeight*0.72){
-   const ratioW=(box.clientWidth-6)/Math.max(el.scrollWidth,1);
-   const ratioH=(box.clientHeight*0.70)/Math.max(el.scrollHeight,1);
-   const ratio=Math.min(ratioW,ratioH,1);
-   el.style.fontSize=Math.max(min,Math.floor(size*ratio))+"px";
- }
+
+ const el=document.getElementById("outCopies");
+
+ if(!el) return;
+
+ const box=el.parentElement;
+
+ if(!box) return;
+
+ // Start large and shrink continuously until the complete formatted value fits.
+
+ // The quantity is limited to 3 digits, but the displayed value still auto-fits the available space.
+
+ let size=120;
+
+ const min=10;
+
+ el.style.fontSize=size+"px";
+
+ el.style.maxWidth="100%";
+
+ el.style.overflow="hidden";
+
+ el.style.whiteSpace="nowrap";
+
+ while(size>min && (el.scrollWidth>box.clientWidth-4 || el.scrollHeight>box.clientHeight*0.72)){
+
+   size-=1;
+
+   el.style.fontSize=size+"px";
+
+ }
+
+ // Safety pass: account for fractional rendering/print engines.
+
+ if(el.scrollWidth>box.clientWidth-4 || el.scrollHeight>box.clientHeight*0.72){
+
+   const ratioW=(box.clientWidth-6)/Math.max(el.scrollWidth,1);
+
+   const ratioH=(box.clientHeight*0.70)/Math.max(el.scrollHeight,1);
+
+   const ratio=Math.min(ratioW,ratioH,1);
+
+   el.style.fontSize=Math.max(min,Math.floor(size*ratio))+"px";
+
+ }
+
 }
+
 function fitLabelText(){
- fitTitle();
- fitCopies();
+
+ fitTitle();
+
+ fitCopies();
+
 }
+
 function update(){
- const type=document.getElementById("type").value;
- const input=document.getElementById("number").value;
- const title=document.getElementById("title").value.trim();
- let copies=document.getElementById("copies").value;
- // Nombre màxim d’exemplars: 3 dígits.
- copies=copies.replace(/\D/g, "").slice(0,3);
- document.getElementById("copies").value=copies;
- const st=document.getElementById("numberStatus");
- let shown=input, ok=false;
- if(type==="ean13"){
-   let d=input.replace(/\D/g,"").slice(0,13);
-   if(d.length===12)d+=check12(d);
-   document.getElementById("number").value=d;shown=d;
-   ok=/^\d{13}$/.test(d)&&check12(d.slice(0,12))===+d[12];
-   if(ok){drawEAN(d);st.textContent="EAN-13 vàlid ✓";st.className="status good";}
-   else {st.textContent="Introdueix 12 o 13 dígits.";st.className="status bad";}
- }else if(type==="isbn"){
-   const e=isbnToEAN(input);
-   ok=!!e;shown=e||input;
-   if(ok){drawEAN(e);st.textContent="ISBN correcte → EAN-13 "+e+" ✓";st.className="status good";}
-   else {st.textContent="ISBN-10 o ISBN-13 no vàlid.";st.className="status bad";}
- }else{
-   ok=input.trim().length>0;
-   if(ok){drawGS1(input);st.textContent="GS1-128 generat ✓";st.className="status good";}
-   else {st.textContent="Introdueix el contingut GS1-128.";st.className="status bad";}
- }
- if(!ok||!title||!copies||!String(copies).replace(/\D/g,""))return false;
- document.getElementById("outTitle").textContent=title.toLocaleUpperCase("ca-ES");
- const cleanCopies=String(copies).replace(/\D/g,"");
-  if(!cleanCopies || BigInt(cleanCopies||"0")<1n) return false;
-  document.getElementById("outCopies").textContent=BigInt(cleanCopies).toLocaleString("ca-ES");
- function formatHumanCode(type, value){
-  const d=String(value||"").replace(/\D/g,"");
-  if(type==="ean13" || type==="isbn"){
-    if(d.length===13) return d[0]+" "+d.slice(1,7)+" "+d.slice(7);
-  }
-  return String(value||"");
+
+ const type=document.getElementById("type").value;
+
+ const input=document.getElementById("number").value;
+
+ const title=document.getElementById("title").value.trim();
+
+ let copies=document.getElementById("copies").value;
+
+ // Nombre màxim d’exemplars: 3 dígits.
+
+ copies=copies.replace(/\D/g, "").slice(0,3);
+
+ document.getElementById("copies").value=copies;
+
+ const st=document.getElementById("numberStatus");
+
+ let shown=input, ok=false;
+
+ if(type==="ean13"){
+
+   let d=input.replace(/\D/g,"").slice(0,13);
+
+   if(d.length===12)d+=check12(d);
+
+   document.getElementById("number").value=d;shown=d;
+
+   ok=/^\d{13}$/.test(d)&&check12(d.slice(0,12))===+d[12];
+
+   if(ok){drawEAN(d);st.textContent="EAN-13 vàlid ✓";st.className="status good";}
+
+   else {st.textContent="Introdueix 12 o 13 dígits.";st.className="status bad";}
+
+ }else if(type==="isbn"){
+
+   const e=isbnToEAN(input);
+
+   ok=!!e;shown=e||input;
+
+   if(ok){drawEAN(e);st.textContent="ISBN correcte → EAN-13 "+e+" ✓";st.className="status good";}
+
+   else {st.textContent="ISBN-10 o ISBN-13 no vàlid.";st.className="status bad";}
+
+ }else{
+
+   ok=input.trim().length>0;
+
+   if(ok){drawGS1(input);st.textContent="GS1-128 generat ✓";st.className="status good";}
+
+   else {st.textContent="Introdueix el contingut GS1-128.";st.className="status bad";}
+
+ }
+
+ if(!ok||!title||!copies||!String(copies).replace(/\D/g,""))return false;
+
+ document.getElementById("outTitle").textContent=title.toLocaleUpperCase("ca-ES");
+
+ const cleanCopies=String(copies).replace(/\D/g,"");
+
+  if(!cleanCopies || BigInt(cleanCopies||"0")<1n) return false;
+
+  document.getElementById("outCopies").textContent=BigInt(cleanCopies).toLocaleString("ca-ES");
+
+ function formatHumanCode(type, value){
+
+  const d=String(value||"").replace(/\D/g,"");
+
+  if(type==="ean13" || type==="isbn"){
+
+    if(d.length===13) return d[0]+" "+d.slice(1,7)+" "+d.slice(7);
+
+  }
+
+  return String(value||"");
+
 }
- const outNum=document.getElementById("outNumber"); outNum.className="digits"+((type==="ean13"||type==="isbn")?" ean-integrated":""); outNum.textContent=(type==="ean13"||type==="isbn")?"":formatHumanCode(type,shown);
- fitLabelText();
- document.getElementById("outType").textContent=type==="ean13"?"EAN-13":type==="isbn"?"ISBN":"GS1-128";
- return true;
+
+ const outNum=document.getElementById("outNumber"); outNum.className="digits"+((type==="ean13"||type==="isbn")?" ean-integrated":""); outNum.textContent=(type==="ean13"||type==="isbn")?"":formatHumanCode(type,shown);
+
+ fitLabelText();
+
+ document.getElementById("outType").textContent=type==="ean13"?"EAN-13":type==="isbn"?"ISBN":"GS1-128";
+
+ return true;
+
 }
+
 function saveData(){
- localStorage.setItem("labelData",JSON.stringify({
-  type:document.getElementById("type").value,number:document.getElementById("number").value,
-  title:document.getElementById("title").value,copies:document.getElementById("copies").value
- }));
- document.getElementById("msg").textContent="Dades guardades en aquest ordinador ✓";document.getElementById("msg").className="status good";
+
+ localStorage.setItem("labelData",JSON.stringify({
+
+  type:document.getElementById("type").value,number:document.getElementById("number").value,
+
+  title:document.getElementById("title").value,copies:document.getElementById("copies").value
+
+ }));
+
+ document.getElementById("msg").textContent="Dades guardades en aquest ordinador ✓";document.getElementById("msg").className="status good";
+
 }
+
 function loadData(){
- try{let d=JSON.parse(localStorage.getItem("labelData")||"null");if(d){
-  document.getElementById("type").value=d.type||"ean13";document.getElementById("number").value=d.number||"";
-  document.getElementById("title").value=d.title||"";document.getElementById("copies").value=d.copies||"";
- }}catch(e){}
- update();
+
+ try{let d=JSON.parse(localStorage.getItem("labelData")||"null");if(d){
+
+  document.getElementById("type").value=d.type||"ean13";document.getElementById("number").value=d.number||"";
+
+  document.getElementById("title").value=d.title||"";document.getElementById("copies").value=d.copies||"";
+
+ }}catch(e){}
+
+ update();
+
 }
+
 function typeChanged(){
- const t=document.getElementById("type").value;
- const l=document.getElementById("numberLabel");
- const n=document.getElementById("number");
- if(t==="ean13"){l.textContent="Número EAN-13";n.placeholder="Introdueix aquí el número EAN-13";n.inputMode="numeric"}
- if(t==="isbn"){l.textContent="Número ISBN";n.placeholder="Introdueix aquí l'ISBN";n.inputMode="text"}
- if(t==="gs1128"){l.textContent="Contingut GS1-128";n.placeholder="Ex.: (01)08412345678903(17)261231";n.inputMode="text"}
- update();
+
+ const t=document.getElementById("type").value;
+
+ const l=document.getElementById("numberLabel");
+
+ const n=document.getElementById("number");
+
+ if(t==="ean13"){l.textContent="Número EAN-13";n.placeholder="Introdueix aquí el número EAN-13";n.inputMode="numeric"}
+
+ if(t==="isbn"){l.textContent="Número ISBN";n.placeholder="Introdueix aquí l'ISBN";n.inputMode="text"}
+
+ if(t==="gs1128"){l.textContent="Contingut GS1-128";n.placeholder="Ex.: (01)08412345678903(17)261231";n.inputMode="text"}
+
+ update();
+
 }
+
 document.getElementById("type").addEventListener("change",typeChanged);
+
 ["number","title","copies"].forEach(id=>document.getElementById(id).addEventListener("input",update));
+
 document.getElementById("update").addEventListener("click",()=>{if(update()){document.getElementById("msg").textContent="Etiqueta actualitzada ✓";document.getElementById("msg").className="status good";}});
+
 document.getElementById("remember").addEventListener("click",saveData);
+
 function printLabel(){
+
   if(!update()){
-    document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
-    document.getElementById("msg").className="status bad";
+    document.getElementById("msg").textContent =
+      "Revisa el número, el títol i els exemplars abans d'imprimir.";
+    document.getElementById("msg").className = "status bad";
     return;
   }
 
-  const label=document.querySelector(".label").cloneNode(true);
-  const w=window.open("","_blank","width=1100,height=700");
+  const label = document.querySelector(".label").cloneNode(true);
+
+  const w = window.open("", "_blank", "width=1100,height=700");
 
   if(!w){
-    document.getElementById("msg").textContent="El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents.";
-    document.getElementById("msg").className="status bad";
+    document.getElementById("msg").textContent =
+      "El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents.";
+    document.getElementById("msg").className = "status bad";
     return;
   }
 
   /*
-    OBJECTIU FÍSIC:
-      etiqueta Zebra = 100 x 50 mm horitzontal
-      marge = 5 mm per costat
-      zona de disseny = 90 x 40 mm
-      centrat exacte.
+    COMPENSACIÓ PER A LA ZEBRA
 
-    IMPORTANT:
-    No fem cap rotació ni transformació.
-    La pàgina que veu Chrome/Firefox és EXACTAMENT 100 x 50 mm.
-    Això evita que cada navegador calculi una pàgina diferent.
+    La Zebra està girant físicament la pàgina 90°.
+    Per això enviem al navegador una pàgina PORTRAIT de 50 x 100 mm.
+    La Zebra la gira i físicament queda 100 x 50 mm.
+
+    El contingut es gira -90° abans d'enviar-lo a imprimir,
+    de manera que després de la rotació de la impressora queda
+    en horitzontal i en la orientació correcta.
   */
-  const page=`
-    @page{
-      size:100mm 50mm;
-      margin:0;
+
+  const page = `
+    @page {
+      size: 50mm 100mm;
+      margin: 0;
     }
 
-    html{
-      width:100mm !important;
-      height:50mm !important;
-      margin:0 !important;
-      padding:0 !important;
+    html {
+      width: 50mm !important;
+      height: 100mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
-    body{
-      width:100mm !important;
-      height:50mm !important;
-      margin:0 !important;
-      padding:0 !important;
-      overflow:hidden !important;
-      background:#fff;
+    body {
+      width: 50mm !important;
+      height: 100mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      background: #fff;
     }
 
-    @media print{
-      @page{
-        size:100mm 50mm;
-        margin:0;
+    @media print {
+      @page {
+        size: 50mm 100mm;
+        margin: 0;
       }
 
-      html,body{
-        width:100mm !important;
-        height:50mm !important;
-        margin:0 !important;
-        padding:0 !important;
-        overflow:hidden !important;
+      html, body {
+        width: 50mm !important;
+        height: 100mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
       }
     }
   `;
 
-  const printCSS=`
-    *{box-sizing:border-box}
+  const printCSS = `
+    * { box-sizing: border-box; }
 
-    .label{
-      position:absolute !important;
-      left:5mm !important;
-      top:5mm !important;
-
-      width:90mm !important;
-      height:40mm !important;
-
-      min-width:90mm !important;
-      min-height:40mm !important;
-
-      margin:0 !important;
-      padding:0 !important;
-
-      border:0 !important;
-      border-radius:3mm;
-      overflow:hidden !important;
-      background:#fff;
-
-      display:grid !important;
-      grid-template-columns:32mm 1fr !important;
-      grid-template-rows:10mm 1fr !important;
-
-      transform:none !important;
-      zoom:1 !important;
+    body {
+      position: relative !important;
+      overflow: hidden !important;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    .title{
-      grid-column:1/3;
-      grid-row:1;
-      border-bottom:1px solid #222;
+    .label {
+      position: absolute !important;
 
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      left: 50% !important;
+      top: 50% !important;
 
-      text-align:center;
-      padding:0 2mm;
+      width: 90mm !important;
+      height: 40mm !important;
 
-      font-size:18px;
-      font-weight:800;
-      line-height:1;
+      min-width: 90mm !important;
+      min-height: 40mm !important;
 
-      overflow:hidden;
-      white-space:nowrap;
+      margin: 0 !important;
+      padding: 0 !important;
+
+      border: 0 !important;
+      border-radius: 3mm;
+      overflow: hidden !important;
+      background: #fff;
+
+      display: grid !important;
+      grid-template-columns: 32mm 1fr !important;
+      grid-template-rows: 10mm 1fr !important;
+
+      /* COMPENSA LA ROTACIÓ DE LA IMPRESSORA */
+      transform: translate(-50%, -50%) rotate(-90deg) !important;
+      transform-origin: center center !important;
+
+      zoom: 1 !important;
     }
 
-    .copies{
-      grid-column:1;
-      grid-row:2;
-
-      border-right:1px solid #222;
-
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-
-      min-width:0;
-      overflow:hidden;
-      padding:0 1mm;
+    .title {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 2mm;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      overflow: hidden;
+      white-space: nowrap;
     }
 
-    .num{
-      font-size:72px;
-      font-weight:900;
-      line-height:.82;
-      white-space:nowrap;
-      max-width:100%;
-      overflow:hidden;
+    .copies {
+      grid-column: 1;
+      grid-row: 2;
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      overflow: hidden;
+      padding: 0 1mm;
     }
 
-    .txt{
-      font-size:17px;
-      font-weight:800;
-      line-height:1;
-      margin-top:2px;
-      white-space:nowrap;
-      max-width:100%;
-      overflow:hidden;
+    .num {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: .82;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
     }
 
-    .barcode{
-      grid-column:2;
-      grid-row:2;
-
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-
-      min-width:0;
-      overflow:hidden;
-
-      padding:2mm 4mm;
+    .txt {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1;
+      margin-top: 2px;
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
     }
 
-    .barcode svg{
-      width:100%;
-      height:24mm;
-      display:block;
+    .barcode {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      overflow: hidden;
+      padding: 2mm 4mm;
     }
 
-    .digits{
-      font-size:15px;
-      font-weight:800;
-      letter-spacing:1.4px;
-      margin-top:0;
-      transform:translateY(-1mm);
-      white-space:nowrap;
+    .barcode svg {
+      width: 100%;
+      height: 24mm;
+      display: block;
+    }
+
+    .digits {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      margin-top: 0;
+      transform: translateY(-1mm);
+      white-space: nowrap;
     }
 
     .typebadge,
-    .ean-integrated{
-      display:none !important;
+    .ean-integrated {
+      display: none !important;
     }
   `;
 
   w.document.open();
+
   w.document.write(`<!doctype html>
 <html lang="ca">
 <head>
@@ -503,74 +818,96 @@ function printLabel(){
 <title>Imprimir etiqueta 100x50</title>
 <style>
 ${page}
-body{font-family:Arial,Helvetica,sans-serif}
 ${printCSS}
 </style>
 </head>
 <body></body>
 </html>`);
+
   w.document.close();
 
-  w.document.body.appendChild(w.document.importNode(label,true));
+  w.document.body.appendChild(
+    w.document.importNode(label, true)
+  );
 
-  setTimeout(()=>{
-    // Títol: sempre dins dels 96 mm.
-    const t=w.document.querySelector(".title");
+  setTimeout(() => {
+
+    const t = w.document.querySelector(".title");
     if(t){
-      let fs=20;
-      while(fs>8 && t.scrollWidth>t.clientWidth){
+      let fs = 20;
+      while(fs > 8 && t.scrollWidth > t.clientWidth){
         fs--;
-        t.style.fontSize=fs+"px";
+        t.style.fontSize = fs + "px";
       }
     }
 
-    // Exemplars: 1..999 sempre dins de la seva columna.
-    const n=w.document.querySelector(".num");
-    const box=n&&n.parentElement;
-    if(n&&box){
-      let fs=82;
-      const aw=Math.max(20,box.clientWidth-2);
-      const ah=Math.max(20,box.clientHeight-8);
-      while(fs>10 && (n.scrollWidth>aw || n.scrollHeight>ah)){
+    const n = w.document.querySelector(".num");
+    const box = n && n.parentElement;
+    if(n && box){
+      let fs = 82;
+      const aw = Math.max(20, box.clientWidth - 2);
+      const ah = Math.max(20, box.clientHeight - 8);
+      while(fs > 10 && (n.scrollWidth > aw || n.scrollHeight > ah)){
         fs--;
-        n.style.fontSize=fs+"px";
+        n.style.fontSize = fs + "px";
       }
     }
 
-    const tx=w.document.querySelector(".txt");
+    const tx = w.document.querySelector(".txt");
     if(tx){
-      let fs=20;
-      while(fs>8 && tx.scrollWidth>tx.parentElement.clientWidth-2){
+      let fs = 20;
+      while(fs > 8 && tx.scrollWidth > tx.parentElement.clientWidth - 2){
         fs--;
-        tx.style.fontSize=fs+"px";
+        tx.style.fontSize = fs + "px";
       }
     }
 
     w.focus();
     w.print();
-  },350);
+
+  }, 350);
 }
 
-
 document.getElementById("printlabel").addEventListener("click",()=>printLabel());
+
 window.addEventListener("resize",fitLabelText);
+
 loadData();
+
 </script>
 
-  <style>
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            overflow-x: hidden; /* Evita que res surti pels costats */
-        }
-    </style>
 
 
-    <footer style="width: 100%; box-sizing: border-box; background: #555555; color: #ffffff; text-align: center; padding: 15px 0; font-family: sans-serif; font-size: 10px; letter-spacing: 2px;">
-        <i>by:</i> <strong style="color: #ffffff;"> <i>digitalpages</i></strong>
-    </footer>
+  <style>
+
+        body {
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            overflow-x: hidden; /* Evita que res surti pels costats */
+
+        }
+
+    </style>
+
+
+
+
+
+    <footer style="width: 100%; box-sizing: border-box; background: #555555; color: #ffffff; text-align: center; padding: 15px 0; font-family: sans-serif; font-size: 10px; letter-spacing: 2px;">
+
+        <i>by:</i> <strong style="color: #ffffff;"> <i>digitalpages</i></strong>
+
+    </footer>
+
+
+
 
 
 </body>
+
 </html>
