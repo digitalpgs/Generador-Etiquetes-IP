@@ -302,6 +302,8 @@ function printLabel(size){
     return;
   }
 
+  // Create a completely independent print window. This avoids the print CSS
+  // problems that can occur when printing the main application window.
   const label = document.querySelector(".label").cloneNode(true);
   const is100 = size === "100x50";
 
@@ -312,345 +314,85 @@ function printLabel(size){
     return;
   }
 
-  /*
-    ZEBRA ZT111 — DRIVER SENSE MODIFICAR
-
-    El driver existent està donant al navegador una àrea de 76 × 38 mm.
-    La etiqueta física és 100 × 50 mm.
-
-    Factor de compensació:
-      100 / 76 = 1.315789
-       50 / 38 = 1.315789
-
-    Per tant:
-      - Firefox queda al 100 %
-      - el driver no es toca
-      - nosaltres precompensem la mida en CSS
-      - físicament el contingut ha de sortir 100 × 50 mm
-  */
-
-  const COMP = 100 / 76; // 1.315789...
-
-  const pageCSS = is100
-    ? `@page{
-         size:76mm 38mm;
-         margin:0;
-         padding:0;
-       }`
-    : `@page{
-         size:A4 portrait;
-         margin:0;
-         padding:0;
-       }`;
+  const page = is100
+    ? "@page{size:100mm 50mm;margin:0}"
+    : "@page{size:A4 portrait;margin:0}";
 
   const labelCSS = is100 ? `
-    html,body{
-      margin:0!important;
-      padding:0!important;
-      background:#fff;
-    }
-
-    /*
-      El document que veu Firefox és 76 × 38 mm perquè és
-      exactament el que informa el driver.
-    */
-    .print-page{
-      position:relative;
-      width:76mm;
-      height:38mm;
-      margin:0;
-      padding:0;
-      overflow:hidden;
-    }
-
-    /*
-      El contingut es precompensa 1,315789×.
-      Això permet deixar Firefox al 100 %.
-    */
-    .label{
-      position:absolute;
-      left:0;
-      top:0;
-      width:100mm!important;
-      height:50mm!important;
-      min-width:100mm!important;
-      min-height:50mm!important;
-      max-width:100mm!important;
-      max-height:50mm!important;
-      margin:0!important;
-      box-sizing:border-box;
-      border:1px solid #222;
-      border-radius:3mm;
-      overflow:hidden;
-      display:grid;
-      grid-template-columns:29mm 1fr;
-      grid-template-rows:13mm 1fr;
-
-      /*
-        IMPORTANT:
-        no fem scale aquí perquè Firefox mostraria una escala
-        diferent de 100 %. La compensació és en les dimensions.
-      */
-    }
-
-    .title{
-      grid-column:1 / 3;
-      grid-row:1;
-      width:100%;
-      height:13mm;
-      box-sizing:border-box;
-      padding:0 2.5mm;
-      font-size:17px;
-      font-weight:800;
-      line-height:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      white-space:nowrap;
-      overflow:hidden;
-      border-bottom:1px solid #222;
-    }
-
-    .copies{
-      grid-column:1;
-      grid-row:2;
-      width:29mm;
-      height:37mm;
-      box-sizing:border-box;
-      border-right:1px solid #222;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      padding:0 1mm;
-    }
-
-    .num{
-      font-size:68px;
-      font-weight:900;
-      line-height:.82;
-      white-space:nowrap;
-      max-width:100%;
-      overflow:hidden;
-      text-align:center;
-    }
-
-    .txt{
-      font-size:19px;
-      font-weight:800;
-      line-height:1;
-      margin-top:4px;
-      max-width:100%;
-      white-space:nowrap;
-      overflow:hidden;
-      text-align:center;
-    }
-
-    .barcode{
-      grid-column:2;
-      grid-row:2;
-      width:auto;
-      height:37mm;
-      box-sizing:border-box;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:2.5mm 4mm 2mm 4mm;
-      overflow:hidden;
-    }
-
-    #svg{
-      width:100%;
-      height:24mm;
-      min-height:24mm;
-      display:block;
-    }
-
-    .digits{
-      font-size:15px;
-      font-weight:800;
-      letter-spacing:1.4px;
-      line-height:1;
-      margin-top:0;
-      transform:translateY(-1mm);
-      white-space:nowrap;
-    }
-
-    .typebadge{
-      display:none!important;
-    }
-
-    *{
-      -webkit-print-color-adjust:exact!important;
-      print-color-adjust:exact!important;
-      box-sizing:border-box;
-    }
+    .label{width:96mm;height:46mm;min-width:96mm;margin:2mm;box-sizing:border-box;border:0;border-radius:3mm;
+      grid-template-columns:34mm 1fr;grid-template-rows:12mm 1fr}
+    .title{padding:0 2.5mm;text-align:center;justify-content:center}
+    .copies{min-width:0;overflow:hidden;padding:0 1mm}.num{font-size:68px;max-width:100%;overflow:hidden}.txt{font-size:19px;max-width:100%;overflow:hidden}
+    .barcode{padding:3mm 5mm}.barcode svg{height:20mm}
+    .digits{font-size:14px;letter-spacing:1.7px;transform:translateY(-1.5mm)}.typebadge{font-size:7px}
   ` : `
-    .label{
-      width:180mm;
-      height:65mm;
-      min-width:180mm;
-      margin:15mm auto 0;
-    }
+    .label{width:180mm;height:65mm;min-width:180mm}
   `;
 
   w.document.open();
   w.document.write(`<!doctype html>
-<html lang="ca">
-<head>
-<meta charset="utf-8">
-<title>Imprimir etiqueta</title>
+<html lang="ca"><head><meta charset="utf-8"><title>Imprimir etiqueta</title>
 <style>
-${pageCSS}
-
-html,body{
-  margin:0;
-  padding:0;
-  background:#fff;
-}
-
-body{
-  font-family:Arial,Helvetica,sans-serif;
-}
-
-.label{
-  background:#fff;
-  border:1px solid #222;
-  overflow:hidden;
-  display:grid;
-  grid-template-columns:50mm 1fr;
-  grid-template-rows:18mm 1fr;
-  box-sizing:border-box;
-  border-radius:4mm;
-}
-
-.title{
-  grid-column:1/3;
-  grid-row:1;
-  border-bottom:1px solid #222;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:0 5mm;
-  font-size:24px;
-  font-weight:800;
-  overflow:hidden;
-  white-space:nowrap;
-  line-height:1;
-}
-
-.copies{
-  grid-column:1;
-  grid-row:2;
-  border-right:1px solid #222;
-  display:flex;
-  min-width:0;
-  overflow:hidden;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-.num{
-  font-size:110px;
-  font-weight:900;
-  line-height:.82;
-  white-space:nowrap;
-  max-width:100%;
-  overflow:hidden;
-}
-
-.txt{
-  font-size:27px;
-  font-weight:800;
-  margin-top:7px;
-  white-space:nowrap;
-}
-
-.barcode{
-  grid-column:2;
-  grid-row:2;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:2mm 10mm;
-}
-
-.barcode svg{
-  width:100%;
-  height:29mm;
-  display:block;
-}
-
-.digits{
-  font-size:26px;
-  font-weight:800;
-  letter-spacing:2px;
-  margin-top:0;
-  transform:translateY(-2mm);
-  white-space:nowrap;
-}
-
-.typebadge{
-  display:none;
-}
-
+${page}
+html,body{margin:0;padding:0;background:#fff}
+body{font-family:Arial,Helvetica,sans-serif}
+.label{background:#fff;border:1px solid #222;overflow:hidden;
+  display:grid;grid-template-columns:50mm 1fr;grid-template-rows:18mm 1fr;
+  margin:${is100 ? "0" : "15mm auto 0"};box-sizing:border-box;border-radius:4mm}
+.title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
+.copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;
+  flex-direction:column;align-items:center;justify-content:center}
+.num{font-size:110px;font-weight:900;line-height:.82;white-space:nowrap;max-width:100%;overflow:hidden}.txt{font-size:27px;font-weight:800;margin-top:7px;white-space:nowrap}
+.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:2mm 10mm}
+.barcode svg{width:100%;height:29mm;display:block}
+.digits{font-size:26px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
+.typebadge{display:none}
 ${labelCSS}
-</style>
-</head>
-<body>
-<div class="print-page"></div>
-</body>
-</html>`);
-
+</style></head><body></body></html>`);
   w.document.close();
 
-  const page = w.document.querySelector(".print-page");
-  page.appendChild(w.document.importNode(label,true));
+  w.document.body.appendChild(w.document.importNode(label, true));
 
+  // Give the new document one paint cycle so SVG and fonts are ready.
   setTimeout(()=>{
     const t=w.document.querySelector(".title");
     if(t){
-      let fs=parseFloat(w.getComputedStyle(t).fontSize)||17;
-      while(fs>9 && t.scrollWidth>t.clientWidth){
-        fs-=1;
-        t.style.fontSize=fs+"px";
-      }
+      let fs=parseFloat(w.getComputedStyle(t).fontSize)||24;
+      while(fs>9 && t.scrollWidth>t.clientWidth){ fs-=1; t.style.fontSize=fs+"px"; }
     }
-
     const n=w.document.querySelector(".num");
     const box=n && n.parentElement;
     if(n && box){
+      // On 100×50 mm labels, fit the copies number to the REAL inner cell.
+      // It may shrink as much as necessary, but it must never overflow or
+      // change the 100×50 mm label dimensions.
       n.style.maxWidth="100%";
       n.style.overflow="hidden";
+      n.style.lineHeight=".82";
       let fs=parseFloat(w.getComputedStyle(n).fontSize)||68;
-      const availableWidth=Math.max(10,box.clientWidth-4);
-      const availableHeight=Math.max(10,box.clientHeight-16);
-
-      while(fs>20 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
+      const availableWidth=Math.max(20, box.clientWidth-6);
+      const availableHeight=Math.max(20, box.clientHeight-28);
+      while(fs>24 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
         fs-=1;
         n.style.fontSize=fs+"px";
       }
     }
-
     const tx=w.document.querySelector(".txt");
     const txbox=tx && tx.parentElement;
     if(tx && txbox){
+      tx.style.maxWidth="100%";
+      tx.style.overflow="hidden";
       let fs=parseFloat(w.getComputedStyle(tx).fontSize)||19;
-      while(fs>10 && tx.scrollWidth>txbox.clientWidth-4){
+      while(fs>12 && tx.scrollWidth>txbox.clientWidth-4){
         fs-=1;
         tx.style.fontSize=fs+"px";
       }
     }
-
     w.focus();
     w.print();
-  },300);
+  }, 250);
 }
 
 document.getElementById("savepdf").addEventListener("click",()=>printLabel("a4"));
