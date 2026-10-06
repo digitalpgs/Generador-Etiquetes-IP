@@ -34,16 +34,16 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
 .title{grid-column:1/3;grid-row:1;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 5mm;font-size:24px;font-weight:800;overflow:hidden;white-space:nowrap;line-height:1}
 .copies{grid-column:1;grid-row:2;border-right:1px solid #222;display:flex;min-width:0;overflow:hidden;flex-direction:column;align-items:center;justify-content:center}
 .num{font-size:110px;font-weight:900;line-height:.82;white-space:nowrap;max-width:100%;overflow:hidden}.txt{font-size:27px;font-weight:800;margin-top:7px;white-space:nowrap}
-.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4mm 10mm}
-#svg{width:100%;height:34mm;display:block}.digits{font-size:30px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
-.typebadge{display:none}.ean-integrated{display:none}
+.barcode{grid-column:2;grid-row:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5mm 14mm}
+#svg{width:100%;height:31mm;display:block}.digits{font-size:30px;font-weight:800;letter-spacing:2px;margin-top:0;transform:translateY(-2mm);white-space:nowrap}
+.typebadge{display:none}
 
 /* mode impressora 100x50 */
 .print100 .label{width:100mm;height:50mm;min-width:100mm;border-radius:3mm;grid-template-columns:29mm 1fr;grid-template-rows:13mm 1fr}
 .print100 .title{font-size:17px;padding:0 3mm;text-align:center;justify-content:center;line-height:1}
 .print100 .copies{min-width:0;overflow:hidden}.print100 .num{font-size:68px;max-width:100%;overflow:hidden}.print100 .txt{font-size:19px;margin-top:4px;max-width:100%;overflow:hidden}
 .print100 .barcode{padding:4mm 7mm}.print100 #svg{height:22mm}.print100 .digits{font-size:20px;font-weight:800;letter-spacing:1.5px;margin-top:0;transform:translateY(-1.5mm);white-space:nowrap}
-.print100 .typebadge{display:none}.ean-integrated{display:none}
+.print100 .typebadge{display:none}
 
 @media(max-width:850px){.layout{grid-template-columns:1fr}.label{transform:scale(.75);transform-origin:center}}
 @media print{
@@ -86,7 +86,8 @@ button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:8px;font-s
    <input id="copies" type="number" min="1" max="999" inputmode="numeric" placeholder="Introdueix aquí el nº d'exemplars">
 
    <button class="blue" id="update">ACTUALITZAR</button>
-      <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA</button>
+   <button class="gray" id="savepdf">GUARDAR PDF / IMPRIMIR</button>
+   <button class="gray" id="printlabel">🖨 IMPRIMIR ETIQUETA 100 × 50 mm</button>
    <button class="gray" id="remember">GUARDAR DADES</button>
    <div id="msg" class="status"></div>
 
@@ -133,24 +134,10 @@ function drawBits(bits){
  for(let i=0;i<bits.length;i++)if(bits[i]==="1"){let r=document.createElementNS(ns,"rect");r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height","94");r.setAttribute("fill","black");svg.appendChild(r);}
 }
 function drawEAN(e){
- const svg=document.getElementById("svg"),ns="http://www.w3.org/2000/svg";svg.innerHTML="";
- svg.setAttribute("viewBox","0 0 190 100");svg.setAttribute("preserveAspectRatio","none");
- let bg=document.createElementNS(ns,"rect");bg.setAttribute("width","190");bg.setAttribute("height","100");bg.setAttribute("fill","white");svg.appendChild(bg);
  const p=PAR[+e[0]];let left="",right="";
  for(let i=1;i<=6;i++)left+=(p[i-1]==="A"?A[+e[i]]:B[+e[i]]);
  for(let i=7;i<=12;i++)right+=C[+e[i]];
- const bits="101"+left+"01010"+right+"101"; const unit=190/bits.length;
- for(let i=0;i<bits.length;i++)if(bits[i]==="1"){
-   let r=document.createElementNS(ns,"rect");
-   const guard=(i<3)||(i>=45&&i<50)||(i>=92);
-   r.setAttribute("x",(i*unit).toFixed(3));r.setAttribute("y","3");
-   r.setAttribute("width",(unit+.08).toFixed(3));r.setAttribute("height",guard?"79":"70");r.setAttribute("fill","black");svg.appendChild(r);
- }
- const addText=(txt,x)=>{let t=document.createElementNS(ns,"text");t.setAttribute("x",String(x));t.setAttribute("y","96");t.setAttribute("text-anchor","middle");t.setAttribute("font-family","Arial,Helvetica,sans-serif");t.setAttribute("font-size","16");t.setAttribute("font-weight","700");t.setAttribute("fill","black");t.textContent=txt;svg.appendChild(t);};
- addText(e[0],7);
- const ls=28,rs=104,step=11.6;
- for(let i=1;i<=6;i++)addText(e[i],ls+(i-1)*step);
- for(let i=7;i<=12;i++)addText(e[i],rs+(i-7)*step);
+ drawBits("101"+left+"01010"+right+"101");
 }
 function check12(s){let n=0;for(let i=0;i<12;i++)n+=+s[i]*(i%2?3:1);return(10-n%10)%10}
 function isbnToEAN(v){
@@ -180,37 +167,23 @@ function gs1Payload(input){
   }
   return s;
 }
-function gs1Bits(v){
-  const GS=String.fromCharCode(29);
-  const tok=[...gs1Payload(v)].map(ch=>ch===GS?"F":ch);
-  for(const ch of tok){ if(ch!=="F"){const c=ch.charCodeAt(0)-32; if(c<0||c>95) throw new Error("GS1-128: caràcter no suportat");} }
-  const isD=c=>c>="0"&&c<="9";
-  const runAt=i=>{let n=0;while(i+n<tok.length&&isD(tok[i+n]))n++;return n;};
-  const values=[];let mode,i=0;
-  const r0=runAt(0);
-  if(r0>=4||(r0>=2&&r0===tok.length)){values.push(105);mode="C";}else{values.push(104);mode="B";}
-  values.push(102); // FNC1 inicial (GS1-128)
-  while(i<tok.length){
-    const t=tok[i];
-    if(t==="F"){values.push(102);i++;continue;}
-    const run=runAt(i);
-    if(mode==="C"){
-      if(run>=2){values.push(+(tok[i]+tok[i+1]));i+=2;}
-      else{values.push(100);mode="B";}
-    }else{
-      if(run>=4){
-        if(run%2){values.push(t.charCodeAt(0)-32);i++;}
-        values.push(99);mode="C";
-      }else{values.push(t.charCodeAt(0)-32);i++;}
-    }
+function drawGS1(v){
+  const payload=gs1Payload(v);
+  // GS1-128 starts in Code Set B and carries FNC1 (value 102).
+  const values=[104,102];
+  for(let i=0;i<payload.length;i++){
+    const ch=payload[i];
+    if(ch===String.fromCharCode(29)){ values.push(102); continue; }
+    const code=ch.charCodeAt(0)-32;
+    if(code<0 || code>95) throw new Error("GS1-128: caràcter no suportat");
+    values.push(code);
   }
   let checksum=values[0];
-  for(let k=1;k<values.length;k++) checksum+=values[k]*k;
+  for(let i=1;i<values.length;i++) checksum += values[i]*i;
   values.push(checksum%103);
   values.push(106);
-  return values.map(x=>C128[x]).join("");
+  drawBits(values.map(v=>C128[v]).join(""));
 }
-function drawGS1(v){ drawBits(gs1Bits(v)); }
 function fitTitle(){
  const el=document.getElementById("outTitle");
  if(!el) return;
@@ -275,7 +248,7 @@ function update(){
    else {st.textContent="ISBN-10 o ISBN-13 no vàlid.";st.className="status bad";}
  }else{
    ok=input.trim().length>0;
-   if(ok){try{drawGS1(input);st.textContent="GS1-128 generat ✓";st.className="status good";}catch(e){ok=false;st.textContent=e.message;st.className="status bad";}}
+   if(ok){drawGS1(input);st.textContent="GS1-128 generat ✓";st.className="status good";}
    else {st.textContent="Introdueix el contingut GS1-128.";st.className="status bad";}
  }
  if(!ok||!title||!copies||!String(copies).replace(/\D/g,""))return false;
@@ -290,7 +263,7 @@ function update(){
   }
   return String(value||"");
 }
- const outNum=document.getElementById("outNumber"); outNum.className="digits"+((type==="ean13"||type==="isbn")?" ean-integrated":""); outNum.textContent=(type==="ean13"||type==="isbn")?"":formatHumanCode(type,shown);
+ document.getElementById("outNumber").textContent=formatHumanCode(type,shown);
  fitLabelText();
  document.getElementById("outType").textContent=type==="ean13"?"EAN-13":type==="isbn"?"ISBN":"GS1-128";
  return true;
@@ -322,129 +295,340 @@ document.getElementById("type").addEventListener("change",typeChanged);
 ["number","title","copies"].forEach(id=>document.getElementById(id).addEventListener("input",update));
 document.getElementById("update").addEventListener("click",()=>{if(update()){document.getElementById("msg").textContent="Etiqueta actualitzada ✓";document.getElementById("msg").className="status good";}});
 document.getElementById("remember").addEventListener("click",saveData);
-/* ---------- IMPRESSIÓ 100 x 50 mm ----------
-   L'etiqueta es dibuixa com UN SOL SVG en mil·límetres (viewBox 0 0 100 50).
-   Marge 2 mm. Els textos s'ajusten al màxim de grandària que cap a la seva zona
-   i el codi de barres ocupa tot l'espai disponible. Com que és vectorial,
-   Chrome i Edge el reescalen exactament igual. */
-function currentEAN(){
-  const type=document.getElementById("type").value, input=document.getElementById("number").value;
-  if(type==="ean13"){let d=input.replace(/\D/g,"").slice(0,13);if(d.length===12)d+=check12(d);return d;}
-  if(type==="isbn")return isbnToEAN(input);
-  return null;
-}
-function buildPrintSVG(){
-  const ns="http://www.w3.org/2000/svg", FONT="Arial,Helvetica,sans-serif";
-  const type=document.getElementById("type").value;
-  const title=document.getElementById("outTitle").textContent;
-  const copies=document.getElementById("outCopies").textContent;
-
-  const holder=document.createElement("div");
-  holder.style.cssText="position:absolute;left:-10000px;top:0;width:400px;height:200px;visibility:hidden";
-  const svg=document.createElementNS(ns,"svg");
-  svg.setAttribute("xmlns",ns);
-  svg.setAttribute("viewBox","0 0 100 50");
-  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
-  svg.setAttribute("width","400");svg.setAttribute("height","200");
-  holder.appendChild(svg);document.body.appendChild(holder);
-
-  const el=(tag,attrs,txt)=>{const e=document.createElementNS(ns,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(txt!==undefined)e.textContent=txt;svg.appendChild(e);return e;};
-  const text=(txt,x,y,fs,anchor,weight)=>el("text",{x:x,y:y,"font-size":fs,"text-anchor":anchor||"middle","font-family":FONT,"font-weight":weight||"700",fill:"#000"},txt);
-  // Mida de font màxima perquè el text càpiga en maxW (mm)
-  const fitFS=(txt,maxW,maxFS,weight)=>{
-    const t=text(txt,0,0,10,"start",weight);
-    const w=Math.max(t.getBBox().width,0.01);
-    svg.removeChild(t);
-    return Math.min(maxFS,maxW*10/w);
-  };
-  const CAP=0.716; // alçada de les majúscules/xifres d'Arial respecte el font-size
-
-  const M=2, L=M, R=100-M, T=M, BOT=50-M;
-  const titleH=12, lineY=T+titleH, divX=L+30;
-
-  el("rect",{x:0,y:0,width:100,height:50,fill:"#fff"});
-  el("line",{x1:L,y1:lineY,x2:R,y2:lineY,stroke:"#000","stroke-width":0.35});
-  el("line",{x1:divX,y1:lineY,x2:divX,y2:BOT,stroke:"#000","stroke-width":0.35});
-
-  // TÍTOL (tan gran com càpiga a 92 mm d'ample i 12 mm d'alt)
-  const tfs=fitFS(title,R-L-4,10.5,"800");
-  text(title,50,(T+lineY)/2+CAP*tfs/2,tfs,"middle","800");
-
-  // EXEMPLARS
-  const colW=divX-L-3, cx=(L+divX)/2;
-  const lfs=fitFS("Exemplars",colW,5.4,"800");
-  const labelBase=BOT-1.8;
-  text("Exemplars",cx,labelBase,lfs,"middle","800");
-  const nTop=lineY+2, nBot=labelBase-lfs*0.95-1.2;
-  const nfs=fitFS(copies,colW,(nBot-nTop)/CAP,"900");
-  text(copies,cx,(nTop+nBot)/2+CAP*nfs/2,nfs,"middle","900");
-
-  // CODI DE BARRES
-  const zx0=divX+2, zx1=R, barTop=lineY+2.2;
-  const addBars=(bits,x0,u,hFn)=>{
-    let i=0;
-    while(i<bits.length){
-      if(bits[i]!=="1"){i++;continue;}
-      const h=hFn(i);let j=i;
-      while(j<bits.length&&bits[j]==="1"&&hFn(j)===h)j++;
-      el("rect",{x:(x0+i*u).toFixed(4),y:barTop,width:((j-i)*u).toFixed(4),height:h-barTop,fill:"#000","shape-rendering":"crispEdges"});
-      i=j;
-    }
-  };
-  const ean=(type==="gs1128")?null:currentEAN();
-  if(ean){
-    const p=PAR[+ean[0]];let left="",right="";
-    for(let i=1;i<=6;i++)left+=(p[i-1]==="A"?A[+ean[i]]:B[+ean[i]]);
-    for(let i=7;i<=12;i++)right+=C[+ean[i]];
-    const bits="101"+left+"01010"+right+"101";
-    const x0=zx0+3.6, u=(zx1-1-x0)/95;
-    const normalBot=BOT-5.6, guardBot=BOT-1.4, dfs=5.2, dBase=BOT-1.4;
-    addBars(bits,x0,u,i=>((i<3)||(i>=45&&i<50)||(i>=92))?guardBot:normalBot);
-    text(ean[0],x0-0.9,dBase,dfs,"end","700");
-    for(let i=1;i<=6;i++)text(ean[i],x0+(3+(i-1)*7+3.5)*u,dBase,dfs,"middle","700");
-    for(let i=7;i<=12;i++)text(ean[i],x0+(50+(i-7)*7+3.5)*u,dBase,dfs,"middle","700");
-  }else{
-    const bits=gs1Bits(document.getElementById("number").value);
-    const u=Math.min(0.7,(zx1-zx0)/(bits.length+20));
-    const x0=zx0+((zx1-zx0)-bits.length*u)/2;
-    addBars(bits,x0,u,()=>BOT-5.6);
-    const human=document.getElementById("number").value.trim();
-    const hfs=fitFS(human,zx1-zx0-1,5.2,"700");
-    text(human,(zx0+zx1)/2,BOT-1.4,hfs,"middle","700");
-  }
-
-  svg.removeAttribute("width");svg.removeAttribute("height");
-  const out=svg.outerHTML;
-  document.body.removeChild(holder);
-  return out;
-}
-function printLabel(){
-  const msg=document.getElementById("msg");
+function printLabel(size){
   if(!update()){
-    msg.textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
-    msg.className="status bad";return;
+    document.getElementById("msg").textContent="Revisa el número, el títol i els exemplars abans d'imprimir.";
+    document.getElementById("msg").className="status bad";
+    return;
   }
-  let markup;
-  try{markup=buildPrintSVG();}catch(e){msg.textContent="Error generant l'etiqueta: "+e.message;msg.className="status bad";return;}
-  const w=window.open("","_blank","width=900,height=520");
+
+  const label = document.querySelector(".label").cloneNode(true);
+  const is100 = size === "100x50";
+
+  const w = window.open("", "_blank", "width=900,height=700");
   if(!w){
-    msg.textContent="El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents.";
-    msg.className="status bad";return;
+    document.getElementById("msg").textContent="El navegador ha bloquejat la finestra d'impressió. Permet finestres emergents per a aquest fitxer.";
+    document.getElementById("msg").className="status bad";
+    return;
   }
+
+  /*
+    IMPRESSIÓ ZEBRA 100 × 50 mm
+
+    Important:
+    - La pàgina física és EXACTAMENT 100 × 50 mm.
+    - No hi ha cap marge de navegador.
+    - L'etiqueta ocupa els 100 × 50 mm sencers.
+    - No fem servir width:96mm / height:46mm.
+    - No fem cap transform ni rotació.
+    - El contingut queda en horitzontal, tal com la fotografia.
+  */
+  const pageCSS = is100
+    ? `@page{
+         size:100mm 50mm;
+         margin:0;
+         padding:0;
+       }`
+    : `@page{
+         size:A4 portrait;
+         margin:0;
+         padding:0;
+       }`;
+
+  const labelCSS = is100 ? `
+    html,body{
+      width:100mm;
+      height:50mm;
+      min-width:100mm;
+      min-height:50mm;
+      max-width:100mm;
+      max-height:50mm;
+      margin:0!important;
+      padding:0!important;
+      overflow:hidden!important;
+    }
+
+    .label{
+      position:relative;
+      width:100mm!important;
+      height:50mm!important;
+      min-width:100mm!important;
+      min-height:50mm!important;
+      max-width:100mm!important;
+      max-height:50mm!important;
+      margin:0!important;
+      padding:0!important;
+      box-sizing:border-box;
+      border:1px solid #222;
+      border-radius:3mm;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:29mm 1fr;
+      grid-template-rows:13mm 1fr;
+    }
+
+    .title{
+      grid-column:1 / 3;
+      grid-row:1;
+      width:100%;
+      height:13mm;
+      box-sizing:border-box;
+      padding:0 2.5mm;
+      font-size:17px;
+      font-weight:800;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      white-space:nowrap;
+      overflow:hidden;
+      border-bottom:1px solid #222;
+    }
+
+    .copies{
+      grid-column:1;
+      grid-row:2;
+      width:29mm;
+      height:37mm;
+      box-sizing:border-box;
+      border-right:1px solid #222;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      padding:0 1mm;
+    }
+
+    .num{
+      font-size:68px;
+      font-weight:900;
+      line-height:.82;
+      white-space:nowrap;
+      max-width:100%;
+      overflow:hidden;
+      text-align:center;
+    }
+
+    .txt{
+      font-size:19px;
+      font-weight:800;
+      line-height:1;
+      margin-top:4px;
+      max-width:100%;
+      white-space:nowrap;
+      overflow:hidden;
+      text-align:center;
+    }
+
+    .barcode{
+      grid-column:2;
+      grid-row:2;
+      width:auto;
+      height:37mm;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:2.5mm 4mm 2mm 4mm;
+      overflow:hidden;
+    }
+
+    #svg{
+      width:100%;
+      height:24mm;
+      min-height:24mm;
+      display:block;
+    }
+
+    .digits{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:1.4px;
+      line-height:1;
+      margin-top:0;
+      transform:translateY(-1mm);
+      white-space:nowrap;
+    }
+
+    .typebadge{
+      display:none!important;
+    }
+
+    /* Evita que Chrome/Firefox intentin afegir cap escala visual. */
+    *{
+      -webkit-print-color-adjust:exact!important;
+      print-color-adjust:exact!important;
+      box-sizing:border-box;
+    }
+  ` : `
+    .label{
+      width:180mm;
+      height:65mm;
+      min-width:180mm;
+      margin:15mm auto 0;
+    }
+  `;
+
   w.document.open();
   w.document.write(`<!doctype html>
-<html lang="ca"><head><meta charset="utf-8"><title>Imprimir etiqueta 100x50</title>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<title>Imprimir etiqueta</title>
 <style>
-@page{size:100mm 50mm;margin:0}
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#fff}
-svg{position:fixed;left:0;top:0;width:100vw;height:100vh;display:block}
-</style></head><body>${markup}</body></html>`);
-  w.document.close();
-  w.onafterprint=()=>{try{w.close();}catch(e){}};
-  setTimeout(()=>{w.focus();w.print();},400);
+${pageCSS}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:#fff;
 }
 
-document.getElementById("printlabel").addEventListener("click",()=>printLabel());
+body{
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+.label{
+  background:#fff;
+  border:1px solid #222;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:50mm 1fr;
+  grid-template-rows:18mm 1fr;
+  box-sizing:border-box;
+  border-radius:4mm;
+}
+
+.title{
+  grid-column:1/3;
+  grid-row:1;
+  border-bottom:1px solid #222;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 5mm;
+  font-size:24px;
+  font-weight:800;
+  overflow:hidden;
+  white-space:nowrap;
+  line-height:1;
+}
+
+.copies{
+  grid-column:1;
+  grid-row:2;
+  border-right:1px solid #222;
+  display:flex;
+  min-width:0;
+  overflow:hidden;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.num{
+  font-size:110px;
+  font-weight:900;
+  line-height:.82;
+  white-space:nowrap;
+  max-width:100%;
+  overflow:hidden;
+}
+
+.txt{
+  font-size:27px;
+  font-weight:800;
+  margin-top:7px;
+  white-space:nowrap;
+}
+
+.barcode{
+  grid-column:2;
+  grid-row:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2mm 10mm;
+}
+
+.barcode svg{
+  width:100%;
+  height:29mm;
+  display:block;
+}
+
+.digits{
+  font-size:26px;
+  font-weight:800;
+  letter-spacing:2px;
+  margin-top:0;
+  transform:translateY(-2mm);
+  white-space:nowrap;
+}
+
+.typebadge{
+  display:none;
+}
+
+${labelCSS}
+</style>
+</head>
+<body></body>
+</html>`);
+
+  w.document.close();
+  w.document.body.appendChild(w.document.importNode(label,true));
+
+  setTimeout(()=>{
+    /* Ajusta el títol sense canviar mai les dimensions de l'etiqueta. */
+    const t=w.document.querySelector(".title");
+    if(t){
+      let fs=parseFloat(w.getComputedStyle(t).fontSize)||17;
+      while(fs>9 && t.scrollWidth>t.clientWidth){
+        fs-=1;
+        t.style.fontSize=fs+"px";
+      }
+    }
+
+    /* Ajusta el nombre d'exemplars dins del seu espai real. */
+    const n=w.document.querySelector(".num");
+    const box=n && n.parentElement;
+    if(n && box){
+      n.style.maxWidth="100%";
+      n.style.overflow="hidden";
+      let fs=parseFloat(w.getComputedStyle(n).fontSize)||68;
+      const availableWidth=Math.max(10,box.clientWidth-4);
+      const availableHeight=Math.max(10,box.clientHeight-16);
+
+      while(fs>20 && (n.scrollWidth>availableWidth || n.scrollHeight>availableHeight)){
+        fs-=1;
+        n.style.fontSize=fs+"px";
+      }
+    }
+
+    /* Ajusta "Exemplars". */
+    const tx=w.document.querySelector(".txt");
+    const txbox=tx && tx.parentElement;
+    if(tx && txbox){
+      let fs=parseFloat(w.getComputedStyle(tx).fontSize)||19;
+      while(fs>10 && tx.scrollWidth>txbox.clientWidth-4){
+        fs-=1;
+        tx.style.fontSize=fs+"px";
+      }
+    }
+
+    w.focus();
+    w.print();
+  },300);
+}
+
+document.getElementById("savepdf").addEventListener("click",()=>printLabel("a4"));
+document.getElementById("printlabel").addEventListener("click",()=>printLabel("100x50"));
 window.addEventListener("resize",fitLabelText);
 loadData();
 </script>
