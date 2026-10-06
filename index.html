@@ -313,19 +313,27 @@ function printLabel(size){
   }
 
   /*
-    IMPRESSIÓ ZEBRA 100 × 50 mm
+    ZEBRA ZT111 — DRIVER SENSE MODIFICAR
 
-    Important:
-    - La pàgina física és EXACTAMENT 100 × 50 mm.
-    - No hi ha cap marge de navegador.
-    - L'etiqueta ocupa els 100 × 50 mm sencers.
-    - No fem servir width:96mm / height:46mm.
-    - No fem cap transform ni rotació.
-    - El contingut queda en horitzontal, tal com la fotografia.
+    El driver existent està donant al navegador una àrea de 76 × 38 mm.
+    La etiqueta física és 100 × 50 mm.
+
+    Factor de compensació:
+      100 / 76 = 1.315789
+       50 / 38 = 1.315789
+
+    Per tant:
+      - Firefox queda al 100 %
+      - el driver no es toca
+      - nosaltres precompensem la mida en CSS
+      - físicament el contingut ha de sortir 100 × 50 mm
   */
+
+  const COMP = 100 / 76; // 1.315789...
+
   const pageCSS = is100
     ? `@page{
-         size:100mm 50mm;
+         size:76mm 38mm;
          margin:0;
          padding:0;
        }`
@@ -337,19 +345,32 @@ function printLabel(size){
 
   const labelCSS = is100 ? `
     html,body{
-      width:100mm;
-      height:50mm;
-      min-width:100mm;
-      min-height:50mm;
-      max-width:100mm;
-      max-height:50mm;
       margin:0!important;
       padding:0!important;
-      overflow:hidden!important;
+      background:#fff;
     }
 
-    .label{
+    /*
+      El document que veu Firefox és 76 × 38 mm perquè és
+      exactament el que informa el driver.
+    */
+    .print-page{
       position:relative;
+      width:76mm;
+      height:38mm;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+    }
+
+    /*
+      El contingut es precompensa 1,315789×.
+      Això permet deixar Firefox al 100 %.
+    */
+    .label{
+      position:absolute;
+      left:0;
+      top:0;
       width:100mm!important;
       height:50mm!important;
       min-width:100mm!important;
@@ -357,7 +378,6 @@ function printLabel(size){
       max-width:100mm!important;
       max-height:50mm!important;
       margin:0!important;
-      padding:0!important;
       box-sizing:border-box;
       border:1px solid #222;
       border-radius:3mm;
@@ -365,6 +385,12 @@ function printLabel(size){
       display:grid;
       grid-template-columns:29mm 1fr;
       grid-template-rows:13mm 1fr;
+
+      /*
+        IMPORTANT:
+        no fem scale aquí perquè Firefox mostraria una escala
+        diferent de 100 %. La compensació és en les dimensions.
+      */
     }
 
     .title{
@@ -457,7 +483,6 @@ function printLabel(size){
       display:none!important;
     }
 
-    /* Evita que Chrome/Firefox intentin afegir cap escala visual. */
     *{
       -webkit-print-color-adjust:exact!important;
       print-color-adjust:exact!important;
@@ -578,14 +603,17 @@ body{
 ${labelCSS}
 </style>
 </head>
-<body></body>
+<body>
+<div class="print-page"></div>
+</body>
 </html>`);
 
   w.document.close();
-  w.document.body.appendChild(w.document.importNode(label,true));
+
+  const page = w.document.querySelector(".print-page");
+  page.appendChild(w.document.importNode(label,true));
 
   setTimeout(()=>{
-    /* Ajusta el títol sense canviar mai les dimensions de l'etiqueta. */
     const t=w.document.querySelector(".title");
     if(t){
       let fs=parseFloat(w.getComputedStyle(t).fontSize)||17;
@@ -595,7 +623,6 @@ ${labelCSS}
       }
     }
 
-    /* Ajusta el nombre d'exemplars dins del seu espai real. */
     const n=w.document.querySelector(".num");
     const box=n && n.parentElement;
     if(n && box){
@@ -611,7 +638,6 @@ ${labelCSS}
       }
     }
 
-    /* Ajusta "Exemplars". */
     const tx=w.document.querySelector(".txt");
     const txbox=tx && tx.parentElement;
     if(tx && txbox){
